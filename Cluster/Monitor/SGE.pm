@@ -265,7 +265,7 @@ method initialise () {
 	my $adminkey = $self->getAdminKey($username);
 	$self->logDebug("adminkey", $adminkey);
 	return if not defined $adminkey;
-	my $adminuser	=	$self->conf()->getKey("core", 'ADMINUSER');	
+	my $adminuser	=	$self->conf()->getKey("core:ADMINUSER");	
 	$self->logDebug("adminuser", $adminuser);
 
 	my $logfile;
@@ -305,8 +305,8 @@ method initialise () {
 
 method getMonitorLogfile ($username, $cluster) {
 	#### GET USERDIR AND AGUADIR
-	my $userdir 	= 	$self->conf()->getKey("core", 'USERDIR');
-	my $aguadir 	= 	$self->conf()->getKey("core", 'AGUADIR');
+	my $userdir 	= 	$self->conf()->getKey("core:USERDIR");
+	my $aguadir 	= 	$self->conf()->getKey("core:AGUADIR");
 	my $outputdir 	=	"$userdir/$username/$aguadir/.cluster";
 
 	return "$outputdir/$cluster-jobscheduler.log";
@@ -315,8 +315,8 @@ method getMonitorLogfile ($username, $cluster) {
 method setQstat {
 	my $conf = $self->conf();
 
-	my $qstat = $conf->getKey("cluster", "QSTAT");
-	$qstat = $conf->getKey("cluster", "QSTAT") if not defined $qstat;
+	my $qstat = $conf->getKey("cluster:QSTAT");
+	$qstat = $conf->getKey("cluster:QSTAT") if not defined $qstat;
 	$self->logError("sgeroot not defined") and exit if not defined $qstat;
 
 	$self->qstat($qstat);	
@@ -330,11 +330,11 @@ method qacct ($username, $cluster, $jobid) {
 
 	my $envars = $self->envars()->{tostring};
 	my $keypairfile = $self->setKeypairFile($username);
-	my $sgeroot = $self->conf()->getKey("cluster", 'SGEROOT');
+	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
 	$self->_setSsh("root", $masterip, $keypairfile);
 	my $sgebin = $self->master()->ops()->getSgeBinRoot();
 
-	my $scheduler	=	$self->conf()->getKey("core", "SCHEDULER");
+	my $scheduler	=	$self->conf()->getKey("core:SCHEDULER");
 	$self->logDebug("scheduler", $scheduler);
 	my $command 	=	"$envars $sgebin/qacct -j $jobid";
 	my $qacct;
@@ -354,12 +354,12 @@ method setEnv {
 	$self->logDebug("Engine::Cluster::Monitor::SGE::setEnv()");
 
 	my $conf = $self->conf();
-	my $sgeroot = $conf->getKey('agua', "SGEROOT");
-	$sgeroot = $conf->getKey("cluster", "SGEROOT") if not defined $sgeroot;
-	my $qmasterport = $conf->getKey("cluster", "SGEQMASTERPORT");
-	$qmasterport = $conf->getKey("cluster", "SGEQMASTERPORT") if not defined $qmasterport;
-	my $execdport = $conf->getKey("cluster", "SGEEXECDPORT");
-	$execdport = $conf->getKey("cluster", "SGEEXECDPORT") if not defined $execdport;
+	my $sgeroot = $conf->getKey("agua:SGEROOT");
+	$sgeroot = $conf->getKey("cluster:SGEROOT") if not defined $sgeroot;
+	my $qmasterport = $conf->getKey("cluster:SGEQMASTERPORT");
+	$qmasterport = $conf->getKey("cluster:SGEQMASTERPORT") if not defined $qmasterport;
+	my $execdport = $conf->getKey("cluster:SGEEXECDPORT");
+	$execdport = $conf->getKey("cluster:SGEEXECDPORT") if not defined $execdport;
 
 	#### CHECK INPUTS
 	$self->logError("sgeroot not defined") and exit if not defined $sgeroot;
@@ -942,7 +942,7 @@ method _envarSub ($envars, $values, $parent) {
 	
 	#### SET USERNAME AND CLUSTER IF NOT DEFINED
 	if ( not defined $values->{sgeroot} ) {
-		$values->{sgeroot} = $self->conf()->getKey("cluster", 'SGEROOT');
+		$values->{sgeroot} = $self->conf()->getKey("cluster:SGEROOT");
 	}
 	
 	#### SET CLUSTER

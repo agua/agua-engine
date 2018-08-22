@@ -44,7 +44,7 @@ method testRunSiphon {
 	$self->conf()->memory(1);
 	
 	#### COPY OPENRC FILE
-	my $installdir	=	$self->conf()->getKey("core", "INSTALLDIR");
+	my $installdir	=	$self->conf()->getKey("core:INSTALLDIR");
 	my $path		=	"bin/install/resources/openstack";
 	my $testdir		=	"$Bin/inputs/$path";
 	my $testfile	=	"$testdir/openrc.sh";
@@ -68,7 +68,7 @@ method testRunSiphon {
 		}
 	];
 
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 
 	*executeWorkflow = sub {
 		$self->logDebug("OVERRIDE executeWorkflow");
@@ -144,7 +144,7 @@ method testExecuteProject {
 	$self->conf()->memory(1);
 	
 	#### COPY OPENRC FILE
-	my $installdir	=	$self->conf()->getKey("core", "INSTALLDIR");
+	my $installdir	=	$self->conf()->getKey("core:INSTALLDIR");
 	my $path		=	"bin/install/resources/openstack";
 	my $testdir		=	"$Bin/inputs/$path";
 	`mkdir -p $testdir` if not -d $testdir;
@@ -175,7 +175,7 @@ method testExecuteProject {
 		}
 	];
 
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 
 	*launchOpenstackNodes	=	sub	{
 		my $self	=	shift;
@@ -246,7 +246,7 @@ method testPrintAuth {
 	#### SET TEST DATABASE
 	$self->setUpTestDatabase();
 	
-	my $installdir		=	$self->conf()->getKey("core", "INSTALLDIR");
+	my $installdir		=	$self->conf()->getKey("core:INSTALLDIR");
 	
 	my $tests	=	[
 		{
@@ -339,7 +339,7 @@ method testPrintConfig {
 			return "$Bin/inputs/data/userdata.tmpl";
 		};
 		
-		my $installdir		=	$self->conf()->getKey("core", "INSTALLDIR");
+		my $installdir		=	$self->conf()->getKey("core:INSTALLDIR");
 		my $templatefile	=	"$installdir/data/userdata.tmpl";
 		$self->logDebug("templatefile", $templatefile);
 	
@@ -408,7 +408,7 @@ method overrideSequence ($method, $sequence) {
 #### SET Test::Virtual
 
 method setVirtual {
-	my $virtualtype		=	$self->conf()->getKey("core", "VIRTUALTYPE");
+	my $virtualtype		=	$self->conf()->getKey("core:VIRTUALTYPE");
 	$self->logDebug("virtualtype", $virtualtype);
 
 	#### RETURN IF TYPE NOT SUPPORTED	

@@ -2,7 +2,7 @@ use Moose::Util::TypeConstraints;
 use MooseX::Declare;
 use Method::Signatures::Modifiers;
 
-class Test::Envar extends Envar with Util::Logger {
+class Test::Engine::Envar extends Envar with Util::Logger {
 
 #### EXTERNAL
 use Test::More;

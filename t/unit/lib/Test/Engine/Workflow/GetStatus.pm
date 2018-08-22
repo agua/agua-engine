@@ -151,7 +151,7 @@ method testGetStatus {
 	diag("getStatus - cluster not started");
 
     #### SET USERNAME AND CLUSTER
-	my $username =  $self->conf()->getKey("database", "TESTUSER");
+	my $username =  $self->conf()->getKey("database:TESTUSER");
 	my $cluster = "$username-testcluster";
 	my $start = 1;
 	my $project =  "Project1";
@@ -244,7 +244,7 @@ method testGetClusterWorkflow {
 	diag("getClusterWorkflow");
 
     #### SET USERNAME AND CLUSTER
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"$username-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";
@@ -277,7 +277,7 @@ method testUpdateClusterWorkflow {
 	diag("updateClusterWorkflow");
 
     #### SET USERNAME AND CLUSTER
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"$username-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";
@@ -331,7 +331,7 @@ method testUpdateWorkflowStatus {
 	diag("updateWorkflowStatus");
 
     #### SET USERNAME AND CLUSTER
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"$username-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";

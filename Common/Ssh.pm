@@ -46,7 +46,7 @@ method setKeypairFile ( $username) {
 	my $keyname 	= 	"$username-key";
 	my $conf 		= 	$self->conf();
 	#$self->logDebug("conf", $conf);
-	my $userdir 	= 	$conf->getKey('agua', "USERDIR");
+	my $userdir 	= 	$conf->getKey("agua:USERDIR");
 	$self->logCaller("userdir not defined") and exit if not defined $userdir;
 
 	my $keypairfile = "$userdir/$username/.starcluster/id_rsa-$keyname";
@@ -56,7 +56,7 @@ method setKeypairFile ( $username) {
 	return if not defined $adminkey;
 	my $configdir = "$userdir/$username/.starcluster";
 	if ( $adminkey ) {
-		my $adminuser = $self->conf()->getKey("core", "ADMINUSER");
+		my $adminuser = $self->conf()->getKey("core:ADMINUSER");
 		$self->logDebug("adminuser", $adminuser);
 		my $keyname = "$adminuser-key";
 		$keypairfile = "$userdir/$adminuser/.starcluster/id_rsa-$keyname";
@@ -72,7 +72,7 @@ method getAdminKey ($username) {
 
 	return $self->adminkey() if $self->can('adminkey') and defined $self->adminkey();
 	
-	my $adminkey_names = $self->conf()->getKey('aws', 'ADMINKEY');
+	my $adminkey_names = $self->conf()->getKey("aws:ADMINKEY");
  	#$self->logDebug("adminkey_names", $adminkey_names);
 	$adminkey_names = '' if not defined $adminkey_names;
 	my @names = split ",", $adminkey_names;

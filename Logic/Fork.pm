@@ -2,7 +2,7 @@ use MooseX::Declare;
 
 =head2
 
-PACKAGE		Engine::Engine::Logic::Fork
+PACKAGE		Engine::Logic::Fork
 
 PURPOSE
 
@@ -37,7 +37,7 @@ use FindBin::Real;
 use lib FindBin::Real::Bin() . "/lib";
 use Data::Dumper;
 
-class Engine::Engine::Logic::Fork with Util::Logger {
+class Engine::Logic::Fork with Util::Logger {
 
 #### USE LIB
 use FindBin::Real;

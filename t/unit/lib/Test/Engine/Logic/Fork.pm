@@ -23,8 +23,6 @@ has 'conf' 	=> (
 	default	=>	sub { Conf::Yaml->new( backup	=>	1 );	}
 );
 
-####////}}
-
 method testSelectIndex {
 	diag("selectIndex");
 

@@ -22,7 +22,7 @@ BEGIN {
 
 =head2
 
-PACKAGE		Engine::Engine::Logic::Email
+PACKAGE		Engine::Logic::Email
 
 PURPOSE
 
@@ -58,7 +58,7 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
 #### INTERNAL PACKAGES
-use Engine::Engine::Logic::Email;
+use Engine::Logic::Email;
 use Conf::Yaml;
 
 my $log			=	4;
@@ -111,7 +111,7 @@ my $conf = Conf::Yaml->new(
     logfile     =>  $logfile
 );
 
-my $object = Engine::Engine::Logic::Email->new({
+my $object = Engine::Logic::Email->new({
 	conf		=>	$conf,
     log     	=>  $log,
     printlog    =>  $printlog

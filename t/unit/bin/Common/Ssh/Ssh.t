@@ -83,7 +83,7 @@ my $conf = Conf::Yaml->new(
 );
 
 #### GET TEST USER
-my $username    =   $conf->getKey("database", "TESTUSER");
+my $username    =   $conf->getKey("database:TESTUSER");
 
 my $object = new Test::Engine::Common::Ssh(
     log			=>	$log,

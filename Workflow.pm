@@ -259,18 +259,18 @@ method initialise ($data) {
 	$self->workflowpid($$);	
 
 	#### SET CLUSTER IF DEFINED
-	$self->logError("Engine::Workflow::BUILD    conf->getKey(agua, CLUSTERTYPE) not defined") if not defined $self->conf()->getKey("core", 'CLUSTERTYPE');    
-	$self->logError("Engine::Workflow::BUILD    conf->getKey(cluster, QSUB) not defined") if not defined $self->conf()->getKey('cluster', 'QSUB');
-	$self->logError("Engine::Workflow::BUILD    conf->getKey(cluster, QSTAT) not defined") if not defined $self->conf()->getKey('cluster', 'QSTAT');
+	$self->logError("Engine::Workflow::BUILD    conf->getKey(agua, CLUSTERTYPE) not defined") if not defined $self->conf()->getKey("core:CLUSTERTYPE");    
+	$self->logError("Engine::Workflow::BUILD    conf->getKey(cluster, QSUB) not defined") if not defined $self->conf()->getKey("cluster:QSUB");
+	$self->logError("Engine::Workflow::BUILD    conf->getKey(cluster, QSTAT) not defined") if not defined $self->conf()->getKey("cluster:QSTAT");
 }
 
 method setDbObject ( $data ) {
-	my $user 	=	$data->{username} || $self->conf()->getKey("database", "USER");
-	my $database 	= $data->{database} || $self->conf()->getKey("database", "DATABASE");
-	my $host	= $self->conf()->getKey("database", "HOST");
-	my $password	= $data->{password} || $self->conf()->getKey("database", "PASSWORD");
-	my $dbtype = $data->{dbtype} || $self->conf()->getKey("database", "DBTYPE");
-	my $dbfile = $data->{dbfile} || $self->conf()->getKey("core", "INSTALLDIR") . "/" .$self->conf()->getKey("database", "DBFILE");
+	my $user 	=	$data->{username} || $self->conf()->getKey("database:USER");
+	my $database 	= $data->{database} || $self->conf()->getKey("database:DATABASE");
+	my $host	= $self->conf()->getKey("database:HOST");
+	my $password	= $data->{password} || $self->conf()->getKey("database:PASSWORD");
+	my $dbtype = $data->{dbtype} || $self->conf()->getKey("database:DBTYPE");
+	my $dbfile = $data->{dbfile} || $self->conf()->getKey("core:INSTALLDIR") . "/" .$self->conf()->getKey("database:DBFILE");
 	$self->logDebug("database", $database);
 	$self->logDebug("user", $user);
 	$self->logDebug("dbtype", $dbtype);
@@ -295,7 +295,7 @@ method setDbObject ( $data ) {
 
 
 method setUserLogfile ($username, $identifier, $mode) {
-	my $installdir = $self->conf()->getKey("core", "INSTALLDIR");
+	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
 	$identifier	=~ s/::/-/g;
 	
 	return "$installdir/log/$username.$identifier.$mode.log";
@@ -602,7 +602,7 @@ method runLocally ($stages, $username, $projectname, $workflowname, $workflownum
 method runSge ($stages, $username, $projectname, $workflowname, $workflownumber, $cluster) {	
 #### RUN STAGES ON SUN GRID ENGINE
 
-	my $sgeroot	=	$self->conf()->getKey("cluster", "SGEROOT");
+	my $sgeroot	=	$self->conf()->getKey("cluster:SGEROOT");
 	my $celldir	=	"$sgeroot/$workflowname";
 	$self->logDebug("celldir", $celldir);
 	$self->_newCluster($username, $workflowname) if not -d $celldir;
@@ -683,7 +683,7 @@ method runStages ($stages, $dryrun) {
 	$self->logDebug("no. stages", scalar(@$stages));
 
 	# #### SET EXCHANGE	
-	# my $exchange = $self->conf()->getKey("core", "EXCHANGE");
+	# my $exchange = $self->conf()->getKey("core:EXCHANGE");
 	# $self->logDebug("exchange", $exchange);
 	
 	#### SELF IS SIPHON WORKER
@@ -894,8 +894,8 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		#### SAMPLE HASH
 		$stage->{samplehash}	=  	$samplehash;
 		$stage->{outputdir}		=  	$outputdir;
-		$stage->{qsub}			=  	$self->conf()->getKey("cluster", "QSUB");
-		$stage->{qstat}			=  	$self->conf()->getKey("cluster", "QSTAT");
+		$stage->{qsub}			=  	$self->conf()->getKey("cluster:QSUB");
+		$stage->{qstat}			=  	$self->conf()->getKey("cluster:QSTAT");
 
 		#### LOG
 		$stage->{log} 			=	$self->log();
@@ -1265,7 +1265,7 @@ method stopWorkflow {
 	my $data         =	$self->data();
 
 	#### SET EXECUTE WORKFLOW COMMAND
-    my $bindir = $self->conf()->getKey("core", 'INSTALLDIR') . "/cgi-bin";
+    my $bindir = $self->conf()->getKey("core:INSTALLDIR") . "/cgi-bin";
 
     my $username = $data->{username};
     my $projectname = $data->{projectname};

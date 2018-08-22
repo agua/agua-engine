@@ -70,11 +70,11 @@ method initialise ($hash) {
 
   #### SET DATABASE HANDLE
   $self->logDebug("Doing self->setDbObject");
-  $hash->{database}    =   $self->conf()->getKey("database", "TESTDATABASE");
-  $hash->{dbuser}      =   $self->conf()->getKey("database", "TESTUSER");
-  $hash->{dbpassword}  =   $self->conf()->getKey("database", "TESTPASSWORD");
-  $hash->{sessionid}   =   $self->conf()->getKey("database", "TESTSESSIONID");
-  $hash->{dbfile}      =   $self->conf()->getKey("core", 'INSTALLDIR') . "/" . $self->conf()->getKey("database", "TESTDBFILE");
+  $hash->{database}    =   $self->conf()->getKey("database:TESTDATABASE");
+  $hash->{dbuser}      =   $self->conf()->getKey("database:TESTUSER");
+  $hash->{dbpassword}  =   $self->conf()->getKey("database:TESTPASSWORD");
+  $hash->{sessionid}   =   $self->conf()->getKey("database:TESTSESSIONID");
+  $hash->{dbfile}      =   $self->conf()->getKey("core:INSTALLDIR") . "/" . $self->conf()->getKey("database:TESTDBFILE");
 
   $self->setDbObject( $hash ) if not defined $self->table()->db();
 }
@@ -210,7 +210,7 @@ method testExecuteWorkflow {
     "submit"          =>  0
   };
 
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";
 	my $workflownumber 	=  1;

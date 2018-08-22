@@ -82,7 +82,7 @@ method initialise () {
 method testSetMonitor {
 	diag("Test setMonitor");
 	
-	my $clustertype =  $self->conf()->getKey('agua', 'CLUSTERTYPE');
+	my $clustertype =  $self->conf()->getKey("agua:CLUSTERTYPE");
 	my $classfile = "Agua/Monitor/" . uc($clustertype) . ".pm";
 	my $module = "Agua::Monitor::$clustertype";
 	$self->logInfo("Doing require $classfile");

@@ -75,9 +75,9 @@ method initialise () {
 }
 
 method initialiseDbh () {
-	my $database = $self->conf()->getKey('database', 'TESTDATABASE');	
-	my $user = $self->conf()->getKey('database', 'TESTUSER');	
-	my $password = $self->conf()->getKey('database', 'TESTPASSWORD');	
+	my $database = $self->conf()->getKey("database:TESTDATABASE");	
+	my $user = $self->conf()->getKey("database:TESTUSER");	
+	my $password = $self->conf()->getKey("database:TESTPASSWORD");	
 	
 	return $self->setDbh({
 		database	=>	$database,
@@ -126,7 +126,7 @@ method incrementFile ($logfile) {
 
 method testSetMonitor {
 $self->logDebug("");
-	my $clustertype =  $self->conf()->getKey('agua', 'CLUSTERTYPE');
+	my $clustertype =  $self->conf()->getKey("agua:CLUSTERTYPE");
 	my $classfile = "Agua/Monitor/" . uc($clustertype) . ".pm";
 	my $module = "Agua::Monitor::$clustertype";
 	require $classfile;

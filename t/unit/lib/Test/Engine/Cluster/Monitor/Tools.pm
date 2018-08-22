@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Test::File::Tools extends File::Tools {
+class Test::Engine::Cluster::Monitor::Tools extends File::Tools {
 use Data::Dumper;
 use Test::More;
 
@@ -44,7 +44,7 @@ method initialise () {
 method testSetMonitor {
 	$self->logDebug("");
 	$self->logDebug("self->conf", $self->conf());
-	my $clustertype =  $self->conf()->getKey('agua', 'CLUSTERTYPE');
+	my $clustertype =  $self->conf()->getKey("agua:CLUSTERTYPE");
 	my $classfile = "Agua/Monitor/" . uc($clustertype) . ".pm";
 	my $module = "Agua::Monitor::$clustertype";
 	$self->logDebug("Doing require $classfile");
@@ -65,4 +65,4 @@ method testSetMonitor {
 
 
 
-}   #### Test::Agua::File::Tools
+} 

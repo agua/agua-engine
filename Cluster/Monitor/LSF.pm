@@ -704,14 +704,14 @@ sub get_db {
 	my $conf = $self->get_conf();	
 	
 	#### CREATE DB OBJECT USING DBASE FACTORY
-my $db = 	DBaseFactory->new( $conf->getKey("database", "DBTYPE"),
+my $db = 	DBaseFactory->new( $conf->getKey("database:DBTYPE"),
 	{
-		'DBFILE'	=>	$conf->getKey("database", "DBFILE"),
-		'DATABASE'	=>	$conf->getKey("database", "DATABASE"),
-		'USER'      =>  $conf->getKey("database", "USER"),
-		'PASSWORD'  =>  $conf->getKey("database", "PASSWORD")
+		'DBFILE'	=>	$conf->getKey("database:DBFILE"),
+		'DATABASE'	=>	$conf->getKey("database:DATABASE"),
+		'USER'      =>  $conf->getKey("database:USER"),
+		'PASSWORD'  =>  $conf->getKey("database:PASSWORD")
 	}
-) or die "Can't create database object to create database: $conf->getKey("database", "DATABASE"). $!\n";
+) or die "Can't create database object to create database: $conf->getKey("database:DATABASE"). $!\n";
 
     #my $db = DBaseFactory->new( "SQLite", { 'DBFILE' => $dbfile } ) or die "Can't open DB file '$dbfile': $!\n";
     #if ( not defined $db )
@@ -985,7 +985,7 @@ sub register {
 
 	#### INSERT ENTRY INTO TABLE
 	my $now = "DATETIME('NOW')";
-	$now = "NOW()" if $self->get_conf()->getKey("database", 'DBTYPE') =~ /^MYSQL$/i;
+	$now = "NOW()" if $self->get_conf()->getKey("database:DBTYPE") =~ /^MYSQL$/i;
   my $query = qq{INSERT INTO monitor VALUES ( '$pid', '$command', '$outputdir', $now), 'running' )};
   $self->logDebug("$query");
   my $success = $self->table()->db()->do($query);

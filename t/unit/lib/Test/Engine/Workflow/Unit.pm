@@ -70,7 +70,7 @@ method testLoadStarCluster {
 	$self->logDebug("");
 
     #### SET USERNAME AND CLUSTER
-	my $username =  $self->conf()->getKey("database", "TESTUSER");
+	my $username =  $self->conf()->getKey("database:TESTUSER");
     $self->username($username);
 	my $cluster =  "$username-testcluster";
     $self->cluster($cluster);
@@ -101,7 +101,7 @@ method testLoadStarCluster {
         cluster     =>  $cluster
     });
     
-	my $userdir	=	$self->conf()->getKey("core", "USERDIR");
+	my $userdir	=	$self->conf()->getKey("core:USERDIR");
 	
     #### SET CLUSTER OBJECT
     my $clusterobject = {
@@ -217,7 +217,7 @@ method testStartStarCluster {
 	diag("startStarCluster - start success");
 	
     #### SET USERNAME AND CLUSTER
-	my $username =  $self->conf()->getKey("database", "TESTUSER");
+	my $username =  $self->conf()->getKey("database:TESTUSER");
     $self->username($username);
 	my $cluster =  "testuser-testcluster";
     $self->cluster($cluster);
@@ -265,7 +265,7 @@ method testExecuteWorkflow {
     #### SET USERNAME AND CLUSTER
 	diag("executeWorkflow");
 	
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $sessionid	=	"0000000000.0000.000";
  	my $cluster 	=  	"testuser-testcluster";
 	my $project 	=  	"Project1";
@@ -349,7 +349,7 @@ method testGetStatus {
 
     #### SET USERNAME AND CLUSTER
 	my $testname = "getstatus";
-	my $username =  $self->conf()->getKey("database", "TESTUSER");
+	my $username =  $self->conf()->getKey("database:TESTUSER");
 	my $cluster = "testuser-testcluster";
 	my $start = 1;
 	my $project =  "Project1";
@@ -444,7 +444,7 @@ method testGetClusterWorkflow {
 
     #### SET USERNAME AND CLUSTER
 	my $testname	=	"getclusterworkflow";
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"testuser-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";
@@ -478,7 +478,7 @@ method testUpdateClusterWorkflow {
 
     #### SET USERNAME AND CLUSTER
 	my $testname	=	"getclusterworkflow";
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"testuser-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";
@@ -533,7 +533,7 @@ method testUpdateWorkflowStatus {
 
     #### SET USERNAME AND CLUSTER
 	my $testname	=	"getworkflowstatus";
-	my $username 	=  	$self->conf()->getKey("database", "TESTUSER");
+	my $username 	=  	$self->conf()->getKey("database:TESTUSER");
 	my $cluster 	= 	"testuser-testcluster";
 	my $project 	=  	"Project1";
 	my $workflow 	=  	"Workflow1";

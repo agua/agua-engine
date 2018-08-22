@@ -168,7 +168,7 @@ method moveToDir ( $sourcedir, $targetdir, $label ) {
 method setMonitor {
 	return $self->monitor() if $self->monitor();
 
-	my $clustertype =  $self->conf()->getKey("core", 'CLUSTERTYPE');
+	my $clustertype =  $self->conf()->getKey("core:CLUSTERTYPE");
 	my $classfile = "Agua/Monitor/" . uc($clustertype) . ".pm";
 	my $module = "Agua::Monitor::$clustertype";
 	$self->logDebug("clustertype", $clustertype);
@@ -730,7 +730,7 @@ method printScriptfile {
 
 	$self->logNote("");
 
-	my $clustertype =  $self->conf()->getKey("core", 'CLUSTERTYPE');
+	my $clustertype =  $self->conf()->getKey("core:CLUSTERTYPE");
 	$self->logNote("clustertype", $clustertype);
 	return $self->printPbsScriptfile(@_) if $clustertype eq "PBS";
 	return $self->printLsfScriptfile(@_) if $clustertype eq "LSF";

@@ -3,7 +3,7 @@ use Method::Signatures::Simple;
 
 =head2
 
-PACKAGE		Engine::Engine::Logic::Email
+PACKAGE		Engine::Logic::Email
 
 PURPOSE
 
@@ -30,7 +30,7 @@ use Carp;
 
 use FindBin qw($Bin);
 
-class Engine::Engine::Logic::Email with (Util::Logger, Util::Main, Table::Main) {
+class Engine::Logic::Email with (Util::Logger, Util::Main, Table::Main) {
 
 use Email::Send;
 use Email::Simple;

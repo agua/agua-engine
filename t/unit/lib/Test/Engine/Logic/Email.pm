@@ -24,8 +24,6 @@ has 'conf' 	=> (
 	default	=>	sub { Conf::Yaml->new( backup	=>	1 );	}
 );
 
-####////}}
-
 method testSend {
 	diag("send");
 

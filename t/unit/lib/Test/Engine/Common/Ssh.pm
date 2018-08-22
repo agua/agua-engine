@@ -19,8 +19,6 @@ has 'command'		=> ( is  => 'rw', 'isa' => 'Str|Undef', required	=>	0	);
 has 'remoteuser'	=> ( is  => 'rw', 'isa' => 'Str|Undef', required	=>	0	);
 has 'remotehost'		=> ( is  => 'rw', 'isa' => 'Str|Undef', required	=>	0	);
 
-####////}}
-
 method BUILD ($hash) {
 	$self->logDebug("hash", $hash);	
 }
