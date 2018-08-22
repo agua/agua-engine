@@ -1,0 +1,9 @@
+aguatest	testuser	Project1	Workflow1	0	fork	1	username	1	0	input	username	string	--username	testuser	optional		Fork based on FastQC output				1
+aguatest	testuser	Project1	Workflow1	0	fork	1	project	1	0	input	project	string	--project	Project1	optional						2
+aguatest	testuser	Project1	Workflow1	0	fork	1	workflow	1	0	input	workflow	string	--workflow	Workflow1	optional						3
+aguatest	testuser	Project1	Workflow1	0	fork	1	inputfiles	1	0	input	inputfiles	string	--inputfiles	<PWD>/inputs/simple/fork.in	optional						4
+aguatest	testuser	Project1	Workflow1	0	fork	1	modfile	0	0	input	modfile	string	--modfile		optional		Fork based on FastQC output				1
+aguatest	testuser	Project1	Workflow1	0	fork	1	if	0	0	input	if	string	--if	2	optional		Fork based on FastQC output				1
+aguatest	testuser	Project1	Workflow1	0	fork	1	else	0	0	input	else	string	--else	3	optional		Fork based on FastQC output				1
+aguatest	testuser	Project1	Workflow1	0	sleep1	2	seconds	1	0	input	test	string		5	required					0	
+aguatest	testuser	Project1	Workflow1	0	sleep2	3	seconds	1	0	input	test	string		10	required					0	

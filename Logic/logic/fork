@@ -1,0 +1,193 @@
+#!/usr/bin/perl -w
+
+BEGIN {
+    my $installdir = $ENV{'installdir'} || "/a";
+    unshift(@INC, "$installdir/extlib/linux/lib/perl5");
+    unshift(@INC, "$installdir/extlib/linux/lib/perl5/x86_64-linux-gnu-thread-multi/");
+    unshift(@INC, "$installdir/lib");
+}
+
+
+
+=head2
+
+PACKAGE		Engine::Logic::Fork
+
+PURPOSE
+
+    1. SELECT NEXT STAGE TO BE RUN IN WORKFLOW BASED
+    
+    ON THE CONTENTS OF AN INPUT FILE, THE CONTENTS OF
+    
+    THE DATABASE, OR BOTH
+    
+INPUTS
+    
+    1. (OPTIONAL) INPUT FILE
+	
+		DEFAULT FORMAT: FIRST LINE CONTAINS A
+		
+		ZER0-INDEXED INTEGER DEFINING WHICH
+		
+		BRANCH TO SELECT. E.G.:
+		
+			FILE CONTENTS: 0
+			
+			BRANCHES: 'if, else'
+			
+			'0' SIGNIFIES THE 'IF' BRANCH AND '1'
+			
+			SIGNIFIES THE 'ELSE' BRANCH SO, IN
+			
+			THIS CASE THE 'IF' BRANCH IS SELECTED
+			
+
+			FILE CONTENTS: 1
+			
+			BRANCHES: 'if, else'
+			
+			THE 'ELSE' BRANCH IS SELECTED
+		
+		
+			FILE CONTENTS: 2
+			
+			BRANCHES: 'if, elsif, elsif, else'
+			
+			THE SECOND 'ELSIF' BRANCH IS SELECTED
+
+    
+	2. (OPTIONAL) DYNAMICALLY LOADED PERL MODULE
+
+        - INSTRUCTIONS LOADED DYNAMICALLY FROM *.pm FILE (--modfile OPTION)
+
+        - STAGES AS ARGUMENTS:
+        
+            --if <Integer>
+            --elsif <Integer>
+            --else <Integer>
+        
+            WHERE <Integer> IS THE STAGE NUMBER
+
+        - NB: OPTIONAL --elsif <Integer> OPTION
+        
+            CAN BE ARRAY OF MULTIPLE VALUES        
+
+OUTPUTS
+
+	1. UPDATED successor FIELD IN fork STAGE
+	
+		ENTRY IN stage TABLE
+	
+	2. UPDATED ancestor ENTRIES IN stage TABLE
+		
+		FOR if/elsif/else STAGES:
+		
+			ancestor = FORK STAGE IF SELECTED
+			
+			ancestor = NULL IF NOT SELECTED
+		
+	3. UPDATE STATUS FOR NON-SELECTED STAGES TO
+	
+		'skip'
+        
+    4. PRINT CONDITIONAL PASS/FAIL INFORMATION TO
+        
+        OUTPUT FILE
+
+=cut
+
+#### EXTERNAL PACKAGES
+use Data::Dumper;
+use Getopt::Long;
+
+#### INTERNAL PACKAGES
+my $installdir;
+BEGIN {
+	$installdir	=	$ENV{'installdir'} || "/a";
+    unshift(@INC, "$installdir/extlib");
+    unshift(@INC, "$installdir/lib");
+}
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+#### INTERNAL PACKAGES
+use Engine::Logic::Fork;
+use Conf::Yaml;
+
+my $log			=	4;
+my $printlog	=	4;
+
+my $username	=	undef;
+my $project		=	undef;
+my $workflow	=	undef;
+my $inputfiles	=	undef;
+my $modfile		=	undef;
+my $if			=	undef;
+my $else		=	undef;
+my $elsif		=	undef;
+my $outputfile	=	undef;
+
+GetOptions (
+    'username=s'    => \$username,
+    'project=s'     => \$project,
+    'workflow=s'    => \$workflow,
+    'inputfiles=s'  => \$inputfiles,
+    'modfile=s'     => \$modfile,
+    'if=s'   		=> \$if,
+    'else=s'   	    => \$else,
+    'elsif=s'   	=> \$elsif,
+    'outputfile=s'  => \$outputfile,
+
+    'log=i'     	=> \$log,
+    'printlog=i'    => \$printlog,
+    'help'          => \$help
+) or die "No elsif specified. Try '--help'\n";
+usage() if defined $help;
+
+#### SET CONF
+my $configfile		=	"$installdir/conf/config.yml";
+my $conf = Conf::Yaml->new(
+    memory      =>  0,
+    inputfile   =>  $configfile,
+    backup      =>  1,
+    log     	=>  $log,
+    printlog    =>  $printlog,
+    logfile     =>  $logfile
+);
+
+my $object = Engine::Logic::Fork->new({
+	conf		=>	$conf,
+    log     	=>  $log,
+    printlog    =>  $printlog,
+    logfile     =>  $logfile,
+    
+    username  	=>  $username,
+    project  	=>  $project,
+    workflow  	=>  $workflow,
+    inputfiles  =>  $inputfiles,
+    modfile     =>  $modfile,
+    if          =>  $if,
+    else        =>  $else,
+    elsif       =>  $elsif,
+    outputfile  =>  $outputfile
+});
+
+#### CHECK INPUTS
+print "inputfiles not defined (option --inputfiles)\n" and exit if not defined $inputfiles;
+#print "if not defined (option --if)\n" and exit if not defined $if;
+#print "else not defined (option --else)\n" and exit if not defined $else;
+
+$object->selectBranch();
+
+
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#									SUBROUTINES
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+sub usage
+{
+	print `perldoc $0`;
+	exit;
+}
+
+

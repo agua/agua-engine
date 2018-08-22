@@ -1,0 +1,39 @@
+---
+apps:
+  -
+    installdir: /a
+    location: bin/logic/fork
+    name: fork
+    number: 1
+    parameters:
+      -
+        argument: --if
+        param: if
+        value: 3
+      -
+        argument: --else
+        param: if
+        value: 4
+    type: fork
+  -
+    ancestor: 1
+    installdir: /a
+    location: bin/test/sleep.sh
+    name: sleep
+    number: 2
+    parameters:
+      -
+        ordinal: 1
+        param: seconds
+        value: 5
+  -
+    ancestor: 1
+    installdir: /a
+    location: bin/test/sleep.sh
+    name: sleep
+    number: 3
+    parameters:
+      -
+        ordinal: 1
+        param: seconds
+        value: 5

@@ -1,0 +1,4 @@
+aguatest	testuser	Project1	Workflow1	0	fastqcFork	1	fork	1	0	input	delete	flag	--delete	1	optional		Remove zipped files after unzipping				1
+aguatest	testuser	Project1	Workflow1	0	fastqcFork	1	filter	0	0	input	filter	string	--filter		optional		Unzip only files containing this text fragment				1
+aguatest	testuser	Project1	Workflow1	0	sleep	2	inputdir	1	0	input	inputdir	directory	--inputdir	Project1/Workflow1/downloads	essential		Location of directory containing *.fa files	input.referencedir.value, input.outputdir.value, input.inputdir.value	refdir,outputdir,inputdir		0
+aguatest	testuser	Project1	Workflow1	0	TOPHAT	3	hits	0	0	output	hits	file		Project1/Workflow1/accepted_hits.sam	Discretion		A list of read alignments in SAM format. SAM is a compact short read alignment format that is increasingly being adopted.				0

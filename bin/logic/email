@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+
+use Email::Send;
+use Email::Send::Gmail;
+use Email::Simple::Creator;
+
+#!/usr/bin/perl -w
+
+BEGIN {
+    my $installdir = $ENV{'installdir'} || "/a";
+    #unshift(@INC, "$installdir/extlib/lib/perl5");
+    #unshift(@INC, "$installdir/extlib/lib/perl5/x86_64-linux-gnu-thread-multi/");
+    #unshift(@INC, "$installdir/lib");
+}
+
+
+
+=head2
+
+PACKAGE		Engine::Logic::Email
+
+PURPOSE
+
+    1. SEND EMAIL VIA GMAIL ACCOUNT TO RECIPIENT
+    
+    
+INPUTS
+    
+    1. RECIPIENT EMAIL ADDRESS
+
+    2. TITLE/SUBJECT OF EMAIL
+    
+    3. MESSAGE BODY
+
+OUTPUTS
+
+	1. SENT MESSAGE TO GMAIL ACCOUNT
+
+=cut
+
+#### EXTERNAL PACKAGES
+use Data::Dumper;
+use Getopt::Long;
+
+#### INTERNAL PACKAGES
+my $installdir;
+BEGIN {
+	$installdir	=	$ENV{'installdir'} || "/a";
+    unshift(@INC, "$installdir/extlib");
+    unshift(@INC, "$installdir/lib");
+}
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+#### INTERNAL PACKAGES
+use Engine::Logic::Email;
+use Conf::Yaml;
+
+my $log			=	4;
+my $printlog	=	4;
+
+my $username	=	undef;
+my $password	=	undef;
+my $project		=	undef;
+my $workflow	=	undef;
+my $stagenumber	=	undef;
+my $stage		=	undef;
+
+my $to	        =	undef;
+my $from		=	undef;
+my $subject		=	undef;
+my $message		=	undef;
+my $messagefile	=	undef;
+
+my $help        =   undef;
+GetOptions (
+    'username=s'    =>  \$username,
+    'password=s'    =>  \$password,
+    'project=s'     =>  \$project,
+    'workflow=s'    =>  \$workflow,
+    'stagenumber=i' =>  \$stagenumber,
+    'stage=s'   	=>  \$stage,
+
+    'to=s'          =>  \$to,
+    'from=s'   	    =>  \$from,
+    'subject=s'     =>  \$subject,
+    'message=s'     =>  \$message,
+    'messagefile=s' =>  \$messagefile,
+
+    'log=i'     	=>  \$log,
+    'printlog=i'    =>  \$printlog,
+    'help'          =>  \$help
+) or die "No from specified. Try '--help'\n";
+usage() if defined $help;
+
+#### SET CONF
+my $configfile		=	"$installdir/conf/config.yml";
+my ($script)        =   $0 =~ /([^\/]+)$/;         
+my $logfile         =   "$installdir/log/$script.log";
+my $conf = Conf::Yaml->new(
+    memory      =>  0,
+    inputfile   =>  $configfile,
+    backup      =>  1,
+    log     	=>  $log,
+    printlog    =>  $printlog,
+    logfile     =>  $logfile
+);
+
+my $object = Engine::Logic::Email->new({
+	conf		=>	$conf,
+    log     	=>  $log,
+    printlog    =>  $printlog
+});
+
+#### CHECK INPUTS
+print "to not defined (option --to)\n" and exit if not defined $to;
+print "from not defined (option --from)\n" and exit if not defined $from;
+
+$object->send({
+    username  	=>  $username,
+    password  	=>  $password,
+
+    project  	=>  $project,
+    workflow  	=>  $workflow,
+    stagenumber =>  $stagenumber,
+    stage       =>  $stage,
+
+    to          =>  $to,
+    from        =>  $from,
+    subject     =>  $subject,
+    message     =>  $message,
+    messagefile =>  $messagefile
+});
+
+
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#									SUBROUTINES
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+sub usage
+{
+	print `perldoc $0`;
+	exit;
+}
+
