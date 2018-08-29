@@ -48,10 +48,12 @@ use Carp;
 
 class Engine::Workflow with (Util::Logger, Util::Timer) {
 
+
+
 #### EXTERNAL MODULES
 use Data::Dumper;
 use FindBin::Real;
-use lib FindBin::Real::Bin() . "/lib";
+use lib FindBin::Real::Bin() . ".";
 use TryCatch;
 
 ##### INTERNAL MODULES	
@@ -366,7 +368,7 @@ method executeWorkflow ($data) {
 	my $start					=	$data->{start};
 	my $stop					=	$data->{stop};
 	my $dryrun				=	$data->{dryrun};
-	my $scheduler			=	$self->conf()->getKey("core" . "SCHEDULER", undef);
+	my $scheduler			=	$self->conf()->getKey("core:SCHEDULER");
 	my $force 		=	$self->force() || $data->{force};
 	$self->logDebug("force", $force);
 	$self->force($force);
