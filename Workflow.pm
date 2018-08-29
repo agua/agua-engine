@@ -366,7 +366,7 @@ method executeWorkflow ($data) {
 	my $start					=	$data->{start};
 	my $stop					=	$data->{stop};
 	my $dryrun				=	$data->{dryrun};
-	my $scheduler			=	$self->conf()->getKey("core" . "SCHEDULER", undef);
+	my $scheduler			=	$self->conf()->getKey("core:SCHEDULER");
 	my $force 		=	$self->force() || $data->{force};
 	$self->logDebug("force", $force);
 	$self->force($force);
@@ -518,7 +518,7 @@ method runInParallel ($workflowhash, $sampledata) {
 	$self->logDebug("submit", $submit);	
 	
 	#### RUN LOCALLY OR ON CLUSTER
-	my $scheduler	=	$self->scheduler() || $self->conf()->getKey("core" . "SCHEDULER", undef);
+	my $scheduler	=	$self->scheduler() || $self->conf()->getKey("core:SCHEDULER");
 	$self->logDebug("scheduler", $scheduler);
 
 	#### GET ENVIRONMENT VARIABLES
