@@ -384,6 +384,13 @@ method setSystemCall {
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
+	my $projectname		=	$$stageparameters[0]->{projectname};
+	my $workflowname	=	$$stageparameters[0]->{workflowname};		
+
+	$exports	=~	s/<FILEROOT>/$fileroot/g;
+	$exports	=~	s/<PROJECT>/$projectname/g;
+	$exports	=~	s/<WORKFLOW>/$workflowname/g;
+
 	#### SET EXECUTOR 
 	my $executor = $self->executor();
 	$self->logDebug("executor", $executor);
@@ -419,11 +426,11 @@ method getFileExports ($file) {
     open(FILE, $file) or die "Can't open file: $file: $!";
 
 	my $exports	=	"";
-    while ( <FILE> ) {
+  while ( <FILE> ) {
 		next if $_	=~ /^#/ or $_ =~ /^\s*$/;
 		chomp;
 		$exports .= "$_; ";
-    }
+  }
 
 	return $exports;
 }
@@ -803,10 +810,8 @@ method setArguments ($stageparameters) {
 		$self->logNote("discretion", $discretion);
 
 		#### SKIP EMPTY FLAG OR ADD 'checked' FLAG
-		if ( $valuetype eq "flag" )
-		{
-			if (not defined $argument or not $argument)
-			{
+		if ( $valuetype eq "flag" ) {
+			if (not defined $argument or not $argument) {
 				$self->logNote("Skipping empty flag", $argument);
 				next;
 			}
@@ -815,34 +820,28 @@ method setArguments ($stageparameters) {
 			next;
 		}
 		
-		if ( $value =~ /^\s*$/ and $discretion ne "required" )
-		{
+		if ( $value =~ /^\s*$/ and $discretion ne "required" ) {
 			$self->logNote("Skipping empty argument", $argument);
 			next;
 		}
 		
-		if ( defined $value )
-		{
+		if ( defined $value )	{
 			$self->logNote("BEFORE value", $value);
 
 			#### ADD THE FILE ROOT FOR THIS USER TO FILE/DIRECTORY PATHS
 			#### IF IT DOES NOT BEGIN WITH A '/', I.E., AN ABSOLUTE PATH
-			if ( $valuetype =~ /^(file|directory)$/ and $value =~ /^[^\/]/ )
-			{	
+			if ( $valuetype =~ /^(file|directory)$/ and $value =~ /^[^\/]/ ) {	
 				$self->logNote("Adding fileroot to $valuetype", $value);
 				$value =~ s/^\///;
 				$value = "$fileroot/$value";
 			}
 
-
 			#### ADD THE FILE ROOT FOR THIS USER TO FILE/DIRECTORY PATHS
 			#### IF IT DOES NOT BEGIN WITH A '/', I.E., AN ABSOLUTE PATH
-			if ( $valuetype =~ /^(files|directories)$/ and $value =~ /^[^\/]/ )
-			{	
+			if ( $valuetype =~ /^(files|directories)$/ and $value =~ /^[^\/]/ ) {	
 				$self->logNote("Adding fileroot to $valuetype", $value);
 				my @subvalues = split ",", $value;
-				foreach my $subvalue ( @subvalues )
-				{
+				foreach my $subvalue ( @subvalues ) {
 					$subvalue =~ s/^\///;
 					$subvalue = "$fileroot/$subvalue";
 				}
@@ -861,8 +860,7 @@ method setArguments ($stageparameters) {
 			}
 			
 			#### DOUBLE '-' OPTIONS (E.G., --inputfile)
-			else
-			{
+			else {
 				push @$arguments, $argument if defined $argument and $argument ne "";
 				push @$arguments, $value;
 			}
@@ -872,15 +870,13 @@ method setArguments ($stageparameters) {
 		}
 	}
 
-	if ( defined $clustertype ){
-		if ( defined $username and $username )
-		{
+	if ( defined $clustertype ) {
+		if ( defined $username and $username ) {
 			push @$arguments, "--username";
 			push @$arguments, $username;
 		}
 	
-		if ( defined $cluster and $cluster )
-		{
+		if ( defined $cluster and $cluster ) {
 			push @$arguments, "--cluster";
 			push @$arguments, $cluster;
 		}

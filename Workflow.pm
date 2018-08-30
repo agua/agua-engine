@@ -295,7 +295,6 @@ method setDbObject ( $data ) {
 	$self->db($db);
 }
 
-
 method setUserLogfile ($username, $identifier, $mode) {
 	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
 	$identifier	=~ s/::/-/g;
@@ -357,7 +356,7 @@ method executeProject {
 
 #### EXECUTE WORKFLOW IN SERIES
 method executeWorkflow ($data) {
-	$self->logDebug("data", $data);
+	# $self->logDebug("data", $data);
 	my $username 			=	$data->{username};
 	my $cluster 			=	$data->{cluster};
 	my $projectname 	=	$data->{projectname};
@@ -520,7 +519,7 @@ method runInParallel ($workflowhash, $sampledata) {
 	$self->logDebug("submit", $submit);	
 	
 	#### RUN LOCALLY OR ON CLUSTER
-	my $scheduler	=	$self->scheduler() || $self->conf()->getKey("core" . "SCHEDULER", undef);
+	my $scheduler	=	$self->scheduler() || $self->conf()->getKey("core:SCHEDULER");
 	$self->logDebug("scheduler", $scheduler);
 
 	#### GET ENVIRONMENT VARIABLES
@@ -1374,7 +1373,7 @@ OUTPUT
 
 	#### GET STAGES FROM stage TABLE
 	my $now = $self->table()->db()->now();
-	$self->logDebug("now", $now);
+	# $self->logDebug("now", $now);
 
 	my $datetime = $self->table()->db()->query("SELECT $now");
 	$self->logDebug("datetime", $datetime);
@@ -1391,7 +1390,7 @@ ORDER BY appnumber
   	$stage->{now} = $datetime;
   }
 	$self->logDebug("# stages", scalar(@$stages)) if defined $stages;
-	$self->logDebug("stages", $stages);
+	# $self->logDebug("stages", $stages);
 
 	##### PRINT STAGES
 	#$self->printStages($stages);
@@ -1522,10 +1521,8 @@ method updateWorkflowStatus ($username, $cluster, $projectname, $workflowname, $
 		status		=>	$status
 	};
 	my $set_fields = ["status"];
-	$self->logDebug("BEFORE _updateTable   hash", $hash);
-	$self->logDebug("self->db", $self->table()->db());
 
-	# my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
+	# $self->logDebug("BEFORE _updateTable   hash", $hash);
 	my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
 	$self->logDebug("success", $success);
 	
