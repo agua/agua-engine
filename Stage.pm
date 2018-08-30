@@ -783,10 +783,11 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
-		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
-		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
+		$value	=~	s/<FILEROOT>/$fileroot/g;
+		$value	=~	s/<PROJECT>/$projectname/g;
+		$value	=~	s/<WORKFLOW>/$workflowname/g;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
-		$value	=~	s/<USERNAME>/$username/g if defined $username;
+		$value	=~	s/<USERNAME>/$username/g;
 
 		if ( defined $samplehash ) {
 			foreach my $key ( keys %$samplehash ) {
