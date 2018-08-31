@@ -71,7 +71,7 @@ has 'maxjobs'     	=>  ( isa => 'Int|Undef', is => 'rw' );
 has 'runsleep'     	=>  ( isa => 'Num|Undef', is => 'rw', default => 0.5 );
 
 # String
-has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'envarfile', 'cluster', 'description', 'notes'] } );
+has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'cluster', 'description', 'notes'] } );
 has 'username'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'workflowname'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'projectname'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
@@ -87,7 +87,7 @@ has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
 has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
-has 'envarfile'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
+has 'prescript'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'location'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 
 has 'setuid'		=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
@@ -344,7 +344,11 @@ completed='0000-00-00 00:00:00'};
 method setSystemCall {
     my $stageparameters =	$self->stageparameters();
 	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
-	
+
+	#### GET VARIABLES	
+	my $projectname		=	$$stageparameters[0]->{projectname};
+	my $workflowname	=	$$stageparameters[0]->{workflowname};
+
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
@@ -361,32 +365,27 @@ method setSystemCall {
 -o $usagefile \\
 -f "%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k"};
 
-	#### SET LIBS
-	#### ADD PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
-	my $aguadir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$aguadir/lib";
-	if ( $ENV{'PERL5LIB'}) {
-		$perl5lib = $ENV{'PERL5LIB'};
-	}
-	my $libs			=	"export PERL5LIB=$perl5lib;";
-
 	#### GET ENVARS
 	my $envar 			= 	$self->envar();
 	my $exports 		= 	$envar->toString();
 	my $stagenumber		=	$self->appnumber();
 	$exports .= " export STAGENUMBER=$stagenumber;";
+	$exports .= " cd $fileroot/$projectname/$workflowname;";
 	$self->logDebug("exports", $exports);
-	my $envarfile		=	$self->envarfile();
-	$self->logDebug("envarfile", $envarfile);
-	if ( defined $envarfile and $envarfile ne "" ) {
-		my $fileexports	=	$self->getFileExports($envarfile);
-		$exports .= $fileexports if defined $fileexports;
+
+	#### GET PRESCRIPT
+	my $prescript		=	$self->prescript();
+	$self->logDebug("prescript", $prescript);
+	if ( defined $prescript and $prescript ne "" ) {
+		if ( ($prescript) =~ s/^file:// ) {
+			$self->logDebug("prescript", $prescript);
+			$prescript	=	$self->getPreScript( $prescript );
+		}
+		$self->logDebug("prescript", $prescript);
+		$exports .= $prescript;
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
-	my $projectname		=	$$stageparameters[0]->{projectname};
-	my $workflowname	=	$$stageparameters[0]->{workflowname};		
-
 	$exports	=~	s/<FILEROOT>/$fileroot/g;
 	$exports	=~	s/<PROJECT>/$projectname/g;
 	$exports	=~	s/<WORKFLOW>/$workflowname/g;
@@ -401,7 +400,6 @@ method setSystemCall {
 	
 	#### SET SYSTEM CALL
 	my $systemcall = [];
-	push @$systemcall, $libs;
 	push @$systemcall, $exports;
 	push @$systemcall, $usage;
 	push @$systemcall, $executor if defined $executor and $executor ne "";
@@ -422,7 +420,7 @@ method containsRedirection ($arguments) {
 	return 0;
 }
 
-method getFileExports ($file) {
+method getPreScript ($file) {
     open(FILE, $file) or die "Can't open file: $file: $!";
 
 	my $exports	=	"";
@@ -783,11 +781,10 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
-		$value	=~	s/<FILEROOT>/$fileroot/g;
-		$value	=~	s/<PROJECT>/$projectname/g;
-		$value	=~	s/<WORKFLOW>/$workflowname/g;
+		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
+		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
-		$value	=~	s/<USERNAME>/$username/g;
+		$value	=~	s/<USERNAME>/$username/g if defined $username;
 
 		if ( defined $samplehash ) {
 			foreach my $key ( keys %$samplehash ) {
