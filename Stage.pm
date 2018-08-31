@@ -375,6 +375,7 @@ method setSystemCall {
 	my $exports 		= 	$envar->toString();
 	my $stagenumber		=	$self->appnumber();
 	$exports .= " export STAGENUMBER=$stagenumber;";
+	$exports .= " cd $fileroot/$projectname/$workflowname;";
 	$self->logDebug("exports", $exports);
 	my $envarfile		=	$self->envarfile();
 	$self->logDebug("envarfile", $envarfile);
