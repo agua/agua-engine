@@ -781,6 +781,7 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
+		$value	=~	s/<FILEROOT>/$fileroot/g;
 		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
 		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
