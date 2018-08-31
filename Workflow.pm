@@ -1409,7 +1409,7 @@ method printStages ($stages) {
 }
 
 method printStage ( $data ) {
-	my $fields = [ 'owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'envarfile', 'cluster', 'description', 'notes' ];
+	my $fields = [ 'owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'cluster', 'description', 'notes' ];
 	print "STAGE $data->{number}\n";
 	foreach my $field ( @$fields ) {
 		print "\t$field: $data->{$field}\n" if defined $data->{$field} and $data->{$field} ne "";

@@ -71,7 +71,7 @@ has 'maxjobs'     	=>  ( isa => 'Int|Undef', is => 'rw' );
 has 'runsleep'     	=>  ( isa => 'Num|Undef', is => 'rw', default => 0.5 );
 
 # String
-has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'envarfile', 'cluster', 'description', 'notes'] } );
+has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'cluster', 'description', 'notes'] } );
 has 'username'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'workflowname'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'projectname'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
@@ -87,7 +87,7 @@ has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
 has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
-has 'envarfile'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
+has 'prescript'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'location'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 
 has 'setuid'		=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
@@ -377,10 +377,10 @@ method setSystemCall {
 	$exports .= " export STAGENUMBER=$stagenumber;";
 	$exports .= " cd $fileroot/$projectname/$workflowname;";
 	$self->logDebug("exports", $exports);
-	my $envarfile		=	$self->envarfile();
-	$self->logDebug("envarfile", $envarfile);
-	if ( defined $envarfile and $envarfile ne "" ) {
-		my $fileexports	=	$self->getFileExports($envarfile);
+	my $prescript		=	$self->prescript();
+	$self->logDebug("prescript", $prescript);
+	if ( defined $prescript and $prescript ne "" ) {
+		my $fileexports	=	$self->getFileExports($prescript);
 		$exports .= $fileexports if defined $fileexports;
 	}
 	$self->logDebug("FINAL exports", $exports);
