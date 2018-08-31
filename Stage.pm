@@ -382,6 +382,8 @@ method setSystemCall {
 			$prescript	=	$self->getPreScript( $prescript );
 		}
 		$self->logDebug("prescript", $prescript);
+		$prescript =~ s/;+\s*//;
+		$prescript .= ";";
 		$exports .= $prescript;
 	}
 	$self->logDebug("FINAL exports", $exports);
@@ -782,8 +784,8 @@ method setArguments ($stageparameters) {
 		$self->logDebug("samplehash", $samplehash);
 
 		$value	=~	s/<FILEROOT>/$fileroot/g;
-		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
-		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
+		$value	=~	s/<PROJECT>/$projectname/g;
+		$value	=~	s/<WORKFLOW>/$workflowname/g;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
 		$value	=~	s/<USERNAME>/$username/g if defined $username;
 
