@@ -382,7 +382,7 @@ method setSystemCall {
 			$prescript	=	$self->getPreScript( $prescript );
 		}
 		$self->logDebug("prescript", $prescript);
-		$prescript =~ s/;+\s*//;
+		$prescript =~ s/[;\s]*$//g;
 		$prescript .= ";";
 		$exports .= $prescript;
 	}
