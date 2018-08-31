@@ -48,10 +48,12 @@ use Carp;
 
 class Engine::Workflow with (Util::Logger, Util::Timer) {
 
+
+
 #### EXTERNAL MODULES
 use Data::Dumper;
 use FindBin::Real;
-use lib FindBin::Real::Bin() . "/lib";
+use lib FindBin::Real::Bin() . ".";
 use TryCatch;
 
 ##### INTERNAL MODULES	
