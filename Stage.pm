@@ -344,7 +344,11 @@ completed='0000-00-00 00:00:00'};
 method setSystemCall {
     my $stageparameters =	$self->stageparameters();
 	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
-	
+
+	#### GET VARIABLES	
+	my $projectname		=	$$stageparameters[0]->{projectname};
+	my $workflowname	=	$$stageparameters[0]->{workflowname};
+
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
@@ -361,15 +365,6 @@ method setSystemCall {
 -o $usagefile \\
 -f "%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k"};
 
-	#### SET LIBS
-	#### ADD PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
-	my $aguadir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$aguadir/lib";
-	if ( $ENV{'PERL5LIB'}) {
-		$perl5lib = $ENV{'PERL5LIB'};
-	}
-	my $libs			=	"export PERL5LIB=$perl5lib;";
-
 	#### GET ENVARS
 	my $envar 			= 	$self->envar();
 	my $exports 		= 	$envar->toString();
@@ -377,17 +372,20 @@ method setSystemCall {
 	$exports .= " export STAGENUMBER=$stagenumber;";
 	$exports .= " cd $fileroot/$projectname/$workflowname;";
 	$self->logDebug("exports", $exports);
+
+	#### GET PRESCRIPT
 	my $prescript		=	$self->prescript();
 	$self->logDebug("prescript", $prescript);
 	if ( defined $prescript and $prescript ne "" ) {
-		my $fileexports	=	$self->getFileExports($prescript);
-		$exports .= $fileexports if defined $fileexports;
+		if ( ($prescript) =~ s/^file:// ) {
+			$self->logDebug("prescript", $prescript);
+			$prescript	=	$self->getPreScript( $prescript );
+		}
+		$self->logDebug("prescript", $prescript);
+		$exports .= $prescript;
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
-	my $projectname		=	$$stageparameters[0]->{projectname};
-	my $workflowname	=	$$stageparameters[0]->{workflowname};		
-
 	$exports	=~	s/<FILEROOT>/$fileroot/g;
 	$exports	=~	s/<PROJECT>/$projectname/g;
 	$exports	=~	s/<WORKFLOW>/$workflowname/g;
@@ -402,7 +400,6 @@ method setSystemCall {
 	
 	#### SET SYSTEM CALL
 	my $systemcall = [];
-	push @$systemcall, $libs;
 	push @$systemcall, $exports;
 	push @$systemcall, $usage;
 	push @$systemcall, $executor if defined $executor and $executor ne "";
@@ -423,7 +420,7 @@ method containsRedirection ($arguments) {
 	return 0;
 }
 
-method getFileExports ($file) {
+method getPreScript ($file) {
     open(FILE, $file) or die "Can't open file: $file: $!";
 
 	my $exports	=	"";
@@ -784,11 +781,10 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
-		$value	=~	s/<FILEROOT>/$fileroot/g;
-		$value	=~	s/<PROJECT>/$projectname/g;
-		$value	=~	s/<WORKFLOW>/$workflowname/g;
+		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
+		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
-		$value	=~	s/<USERNAME>/$username/g;
+		$value	=~	s/<USERNAME>/$username/g if defined $username;
 
 		if ( defined $samplehash ) {
 			foreach my $key ( keys %$samplehash ) {
