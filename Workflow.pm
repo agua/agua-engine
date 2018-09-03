@@ -48,12 +48,10 @@ use Carp;
 
 class Engine::Workflow with (Util::Logger, Util::Timer) {
 
-
-
 #### EXTERNAL MODULES
 use Data::Dumper;
 use FindBin::Real;
-use lib FindBin::Real::Bin() . ".";
+use lib FindBin::Real::Bin() . "/lib";
 use TryCatch;
 
 ##### INTERNAL MODULES	
@@ -295,6 +293,7 @@ method setDbObject ( $data ) {
 	$self->db($db);
 }
 
+
 method setUserLogfile ($username, $identifier, $mode) {
 	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
 	$identifier	=~ s/::/-/g;
@@ -356,7 +355,7 @@ method executeProject {
 
 #### EXECUTE WORKFLOW IN SERIES
 method executeWorkflow ($data) {
-	# $self->logDebug("data", $data);
+	$self->logDebug("data", $data);
 	my $username 			=	$data->{username};
 	my $cluster 			=	$data->{cluster};
 	my $projectname 	=	$data->{projectname};
@@ -822,10 +821,13 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	$self->logDebug("start", $start);
 	$self->logDebug("stop", $stop);
 	
-	#### GET FILEROOT
+	#### GET FILEROOT & USERHOME
 	my $fileroot = $self->util()->getFileroot($username);	
 	$self->logDebug("fileroot", $fileroot);
 	
+	my $userhome = $self->util()->getUserhome($username);	
+	$self->logDebug("userhome", $userhome);
+
 	#### SET FILE DIRS
 	my ($scriptdir, $stdoutdir, $stderrdir) = $self->setFileDirs($fileroot, $projectname, $workflowname);
 	$self->logDebug("scriptdir", $scriptdir);
@@ -873,6 +875,7 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		$stage->{table}				=		$self->table();
 		$stage->{conf}				=  	$self->conf();
 		$stage->{fileroot}		=  	$fileroot;
+		$stage->{userhome}		=  	$userhome;
 
 		#### SET SCHEDULER
 		$stage->{scheduler}		=	$scheduler;
@@ -1373,7 +1376,7 @@ OUTPUT
 
 	#### GET STAGES FROM stage TABLE
 	my $now = $self->table()->db()->now();
-	# $self->logDebug("now", $now);
+	$self->logDebug("now", $now);
 
 	my $datetime = $self->table()->db()->query("SELECT $now");
 	$self->logDebug("datetime", $datetime);
@@ -1521,8 +1524,10 @@ method updateWorkflowStatus ($username, $cluster, $projectname, $workflowname, $
 		status		=>	$status
 	};
 	my $set_fields = ["status"];
+	$self->logDebug("BEFORE _updateTable   hash", $hash);
+	$self->logDebug("self->db", $self->table()->db());
 
-	# $self->logDebug("BEFORE _updateTable   hash", $hash);
+	# my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
 	my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
 	$self->logDebug("success", $success);
 	
