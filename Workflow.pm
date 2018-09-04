@@ -448,6 +448,8 @@ method executeWorkflow ($data) {
 	print "Completed workflow $projectname.$workflowname\n";
 
 	$self->logGroupEnd("$$ Engine::Workflow::executeWorkflow    COMPLETED");
+
+	return $success;
 }
 
 method addQueueSample ($uuid, $status, $data) {
@@ -870,10 +872,10 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		my $stage_number = $counter + 1;
 
 		$stage->{username}		=  	$username;
-		$stage->{cluster}			=  	$cluster;
-		$stage->{workflowpid}	=		$workflowpid;
-		$stage->{table}				=		$self->table();
-		$stage->{conf}				=  	$self->conf();
+		$stage->{cluster}	        =  	$cluster;
+		$stage->{workflowpid}	        =		$workflowpid;
+		$stage->{table}			=		$self->table();
+		$stage->{conf}			=  	$self->conf();
 		$stage->{fileroot}		=  	$fileroot;
 		$stage->{userhome}		=  	$userhome;
 
@@ -1162,7 +1164,7 @@ $where AND paramtype='input'
 ORDER BY ordinal};
 		#$self->logDebug("query", $query);
 
-		my $stageparameters = $self->table()->db()->queryhasharray($query);
+		my $stageparameters = $self->table()->db()->queryhasharray($query) || [];
 		$self->logNote("stageparameters", $stageparameters);
 		$$stages[$i]->{stageparameters} = $stageparameters;
 	}
