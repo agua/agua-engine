@@ -86,6 +86,7 @@ has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
 
 has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'userhome'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'prescript'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'location'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
@@ -342,7 +343,7 @@ completed='0000-00-00 00:00:00'};
 }
 
 method setSystemCall {
-    my $stageparameters =	$self->stageparameters();
+  my $stageparameters =	$self->stageparameters();
 	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
 
 	#### GET VARIABLES	
@@ -352,6 +353,7 @@ method setSystemCall {
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
+	my $userhome = $self->userhome();
 	$self->logDebug("$$ fileroot", $fileroot);
 
 	#### CONVERT ARGUMENTS INTO AN ARRAY IF ITS A NON-EMPTY STRING
@@ -379,13 +381,22 @@ method setSystemCall {
 	if ( defined $prescript and $prescript ne "" ) {
 		if ( ($prescript) =~ s/^file:// ) {
 			$self->logDebug("prescript", $prescript);
+
+			$prescript	=~	s/<USERHOME>/$userhome/g;
+			$prescript	=~	s/<FILEROOT>/$fileroot/g;
+			$prescript	=~	s/<PROJECT>/$projectname/g;
+			$prescript	=~	s/<WORKFLOW>/$workflowname/g;
+
 			$prescript	=	$self->getPreScript( $prescript );
 		}
 		$self->logDebug("prescript", $prescript);
+		$prescript =~ s/[;\s]*$//g;
+		$prescript .= ";";
 		$exports .= $prescript;
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
+	$exports	=~	s/<USERHOME>/$userhome/g;
 	$exports	=~	s/<FILEROOT>/$fileroot/g;
 	$exports	=~	s/<PROJECT>/$projectname/g;
 	$exports	=~	s/<WORKFLOW>/$workflowname/g;
@@ -421,7 +432,8 @@ method containsRedirection ($arguments) {
 }
 
 method getPreScript ($file) {
-    open(FILE, $file) or die "Can't open file: $file: $!";
+	$self->logDebug("file", $file);
+  open(FILE, $file) or die "Can't open file: $file: $!";
 
 	my $exports	=	"";
   while ( <FILE> ) {
@@ -756,7 +768,9 @@ method setArguments ($stageparameters) {
 	my $username 	= $self->username();
 	my $cluster 	= $self->cluster();
 	my $version 	= $self->version();
-	my $fileroot 	= $self->util()->getFileroot($username);
+	my $fileroot 	= $self->fileroot();
+	my $userhome 	= $self->userhome();
+	# my $fileroot 	= $self->util()->getFileroot($username);
 	$self->logNote("username", $username);
 	$self->logNote("cluster", $cluster);
 	$self->logNote("fileroot", $fileroot);
@@ -781,8 +795,10 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
-		$value	=~	s/<PROJECT>/$projectname/g if defined $projectname;
-		$value	=~	s/<WORKFLOW>/$workflowname/g if defined $workflowname;
+		$value	=~	s/<USERHOME>/$userhome/g;
+		$value	=~	s/<FILEROOT>/$fileroot/g;
+		$value	=~	s/<PROJECT>/$projectname/g;
+		$value	=~	s/<WORKFLOW>/$workflowname/g;
 		$value	=~	s/<VERSION>/$version/g if defined $version;
 		$value	=~	s/<USERNAME>/$username/g if defined $username;
 
