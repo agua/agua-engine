@@ -344,17 +344,19 @@ completed='0000-00-00 00:00:00'};
 
 method setSystemCall {
   my $stageparameters =	$self->stageparameters();
-	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
+  my $projectname = $self->projectname();
+  $self->logDebug("projectname:", $projectname);
+  my $workflowname = $self->workflowname();
+  $self->logDebug("workflowname:", $workflowname);
 
-	#### GET VARIABLES	
-	my $projectname		=	$$stageparameters[0]->{projectname};
-	my $workflowname	=	$$stageparameters[0]->{workflowname};
+	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
 
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
 	my $userhome = $self->userhome();
 	$self->logDebug("$$ fileroot", $fileroot);
+	$self->logDebug("$$ userhome", $userhome);
 
 	#### CONVERT ARGUMENTS INTO AN ARRAY IF ITS A NON-EMPTY STRING
 	my $arguments = $self->setArguments($stageparameters);
@@ -408,6 +410,12 @@ method setSystemCall {
 	#### PREFIX APPLICATION PATH WITH PACKAGE INSTALLATION DIRECTORY
 	my $application = $self->installdir() . "/" . $self->location();	
 	$self->logDebug("$$ application", $application);
+
+        $application =~ s/<USERHOME>/$userhome/g;  
+        $application =~ s/<FILEROOT>/$fileroot/g;  
+        $application =~ s/<PROJECT>/$projectname/g;  
+        $application =~ s/<WORKFLOW>/$workflowname/g;  
+
 	
 	#### SET SYSTEM CALL
 	my $systemcall = [];
