@@ -414,7 +414,11 @@ method executeWorkflow ($data) {
 	$self->logDebug("DOING self->setStages");
 	my $stages = $self->setStages($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler);
 	$self->logDebug("no. stages", scalar(@$stages));
-	
+	if ( scalar(@$stages) == 0 ) {
+		print "Skipping workflow: $workflowname\n";
+		return;
+	}
+
 	#### NOTIFY RUNNING
 	print "Running workflow $projectname.$workflowname\n";
 	my $status;
@@ -448,8 +452,6 @@ method executeWorkflow ($data) {
 	print "Completed workflow $projectname.$workflowname\n";
 
 	$self->logGroupEnd("$$ Engine::Workflow::executeWorkflow    COMPLETED");
-
-	return $success;
 }
 
 method addQueueSample ($uuid, $status, $data) {
@@ -822,6 +824,11 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	my ($start, $stop) = $self->setStartStop($stages, $data);
 	$self->logDebug("start", $start);
 	$self->logDebug("stop", $stop);
+
+	if ( not defined $start or not defined $stop ) {
+		print "Skipping stages for workflow: $workflowname\n";
+		return [];		
+	}
 	
 	#### GET FILEROOT & USERHOME
 	my $fileroot = $self->util()->getFileroot($username);	
@@ -872,10 +879,10 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		my $stage_number = $counter + 1;
 
 		$stage->{username}		=  	$username;
-		$stage->{cluster}	        =  	$cluster;
-		$stage->{workflowpid}	        =		$workflowpid;
-		$stage->{table}			=		$self->table();
-		$stage->{conf}			=  	$self->conf();
+		$stage->{cluster}			=  	$cluster;
+		$stage->{workflowpid}	=		$workflowpid;
+		$stage->{table}				=		$self->table();
+		$stage->{conf}				=  	$self->conf();
 		$stage->{fileroot}		=  	$fileroot;
 		$stage->{userhome}		=  	$userhome;
 
@@ -1164,7 +1171,7 @@ $where AND paramtype='input'
 ORDER BY ordinal};
 		#$self->logDebug("query", $query);
 
-		my $stageparameters = $self->table()->db()->queryhasharray($query) || [];
+		my $stageparameters = $self->table()->db()->queryhasharray($query);
 		$self->logNote("stageparameters", $stageparameters);
 		$$stages[$i]->{stageparameters} = $stageparameters;
 	}
@@ -1189,21 +1196,33 @@ method setStartStop ($stages, $json) {
 
 	$self->logDebug("start not defined") and return if not defined $start;
 	$self->logDebug("start is non-numeric: $start") and return if $start !~ /^\d+$/;
-	#$start--;
 
-	$self->logDebug("Stage start $start is greater than the number of stages") and return if $start > @$stages;
+	if ( $start > @$stages ) {
+		print "Stage start ($start) is greater than the number of stages: " . scalar(@$stages) . "\n";
+		$self->logDebug("Stage start ($start) is greater than the number of stages");
+		return;
+
+	}
 
 	if ( defined $stop and $stop ne '' ) {
-		$self->logDebug("stop is non-numeric: $stop") and return if $stop !~ /^\d+$/;
-		$self->logDebug("Runner stoping stage $stop is greater than the number of stages") and return if $stop > scalar(@$stages) + 1;
-		#$stop--;
+		if ( $stop !~ /^\d+$/ ) {
+			$self->logDebug("Stage stop is non-numeric: $stop");
+			return;
+		}
+		elsif ( $stop > scalar(@$stages) + 1 ) {
+			print "Stage stop ($stop) is greater than total stages: " . scalar(@$stages) . "\n";
+			$self->logDebug("Stage stop ($stop) is greater than total stages: " . scalar(@$stages) );
+			return;
+		}
 	}
 	else {
 		$stop = scalar(@$stages) + 1;
 	}
 	
 	if ( $start > $stop ) {
+		print "Stage start ($start) is greater than stage stop ($stop)\n";
 		$self->logDebug("start ($start) is greater than stop ($stop)");
+		return;
 	}
 
 	$self->logNote("$$ Setting start: $start");	
