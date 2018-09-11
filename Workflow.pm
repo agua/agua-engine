@@ -448,8 +448,6 @@ method executeWorkflow ($data) {
 	print "Completed workflow $projectname.$workflowname\n";
 
 	$self->logGroupEnd("$$ Engine::Workflow::executeWorkflow    COMPLETED");
-
-	return $success;
 }
 
 method addQueueSample ($uuid, $status, $data) {
@@ -823,13 +821,10 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	$self->logDebug("start", $start);
 	$self->logDebug("stop", $stop);
 	
-	#### GET FILEROOT & USERHOME
+	#### GET FILEROOT
 	my $fileroot = $self->util()->getFileroot($username);	
 	$self->logDebug("fileroot", $fileroot);
 	
-	my $userhome = $self->util()->getUserhome($username);	
-	$self->logDebug("userhome", $userhome);
-
 	#### SET FILE DIRS
 	my ($scriptdir, $stdoutdir, $stderrdir) = $self->setFileDirs($fileroot, $projectname, $workflowname);
 	$self->logDebug("scriptdir", $scriptdir);
@@ -872,12 +867,11 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		my $stage_number = $counter + 1;
 
 		$stage->{username}		=  	$username;
-		$stage->{cluster}	        =  	$cluster;
-		$stage->{workflowpid}	        =		$workflowpid;
-		$stage->{table}			=		$self->table();
-		$stage->{conf}			=  	$self->conf();
+		$stage->{cluster}			=  	$cluster;
+		$stage->{workflowpid}	=		$workflowpid;
+		$stage->{table}				=		$self->table();
+		$stage->{conf}				=  	$self->conf();
 		$stage->{fileroot}		=  	$fileroot;
-		$stage->{userhome}		=  	$userhome;
 
 		#### SET SCHEDULER
 		$stage->{scheduler}		=	$scheduler;
@@ -1164,7 +1158,7 @@ $where AND paramtype='input'
 ORDER BY ordinal};
 		#$self->logDebug("query", $query);
 
-		my $stageparameters = $self->table()->db()->queryhasharray($query) || [];
+		my $stageparameters = $self->table()->db()->queryhasharray($query);
 		$self->logNote("stageparameters", $stageparameters);
 		$$stages[$i]->{stageparameters} = $stageparameters;
 	}

@@ -86,7 +86,6 @@ has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
 
 has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'userhome'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'prescript'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
 has 'location'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
@@ -343,20 +342,17 @@ completed='0000-00-00 00:00:00'};
 }
 
 method setSystemCall {
-  my $stageparameters =	$self->stageparameters();
-  my $projectname = $self->projectname();
-  $self->logDebug("projectname:", $projectname);
-  my $workflowname = $self->workflowname();
-  $self->logDebug("workflowname:", $workflowname);
-
+    my $stageparameters =	$self->stageparameters();
 	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
+
+	#### GET VARIABLES	
+	my $projectname		=	$$stageparameters[0]->{projectname};
+	my $workflowname	=	$$stageparameters[0]->{workflowname};
 
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
-	my $userhome = $self->userhome();
 	$self->logDebug("$$ fileroot", $fileroot);
-	$self->logDebug("$$ userhome", $userhome);
 
 	#### CONVERT ARGUMENTS INTO AN ARRAY IF ITS A NON-EMPTY STRING
 	my $arguments = $self->setArguments($stageparameters);
@@ -383,22 +379,13 @@ method setSystemCall {
 	if ( defined $prescript and $prescript ne "" ) {
 		if ( ($prescript) =~ s/^file:// ) {
 			$self->logDebug("prescript", $prescript);
-
-			$prescript	=~	s/<USERHOME>/$userhome/g;
-			$prescript	=~	s/<FILEROOT>/$fileroot/g;
-			$prescript	=~	s/<PROJECT>/$projectname/g;
-			$prescript	=~	s/<WORKFLOW>/$workflowname/g;
-
 			$prescript	=	$self->getPreScript( $prescript );
 		}
 		$self->logDebug("prescript", $prescript);
-		$prescript =~ s/[;\s]*$//g;
-		$prescript .= ";";
 		$exports .= $prescript;
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
-	$exports	=~	s/<USERHOME>/$userhome/g;
 	$exports	=~	s/<FILEROOT>/$fileroot/g;
 	$exports	=~	s/<PROJECT>/$projectname/g;
 	$exports	=~	s/<WORKFLOW>/$workflowname/g;
@@ -410,12 +397,6 @@ method setSystemCall {
 	#### PREFIX APPLICATION PATH WITH PACKAGE INSTALLATION DIRECTORY
 	my $application = $self->installdir() . "/" . $self->location();	
 	$self->logDebug("$$ application", $application);
-
-        $application =~ s/<USERHOME>/$userhome/g;  
-        $application =~ s/<FILEROOT>/$fileroot/g;  
-        $application =~ s/<PROJECT>/$projectname/g;  
-        $application =~ s/<WORKFLOW>/$workflowname/g;  
-
 	
 	#### SET SYSTEM CALL
 	my $systemcall = [];
@@ -440,8 +421,7 @@ method containsRedirection ($arguments) {
 }
 
 method getPreScript ($file) {
-	$self->logDebug("file", $file);
-  open(FILE, $file) or die "Can't open file: $file: $!";
+    open(FILE, $file) or die "Can't open file: $file: $!";
 
 	my $exports	=	"";
   while ( <FILE> ) {
@@ -776,9 +756,7 @@ method setArguments ($stageparameters) {
 	my $username 	= $self->username();
 	my $cluster 	= $self->cluster();
 	my $version 	= $self->version();
-	my $fileroot 	= $self->fileroot();
-	my $userhome 	= $self->userhome();
-	# my $fileroot 	= $self->util()->getFileroot($username);
+	my $fileroot 	= $self->util()->getFileroot($username);
 	$self->logNote("username", $username);
 	$self->logNote("cluster", $cluster);
 	$self->logNote("fileroot", $fileroot);
@@ -803,7 +781,6 @@ method setArguments ($stageparameters) {
 		my $samplehash	=	$self->samplehash();
 		$self->logDebug("samplehash", $samplehash);
 
-		$value	=~	s/<USERHOME>/$userhome/g;
 		$value	=~	s/<FILEROOT>/$fileroot/g;
 		$value	=~	s/<PROJECT>/$projectname/g;
 		$value	=~	s/<WORKFLOW>/$workflowname/g;
