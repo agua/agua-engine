@@ -9,7 +9,7 @@ use Test::More;
 use Test::DatabaseRow;
 use DBase::Factory;
 use Ops::Main;
-use Engine::Instance;
+use Engine::Cloud::Instance;
 use Conf::Yaml;
 use FindBin qw($Bin);
 

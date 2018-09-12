@@ -184,7 +184,7 @@ method _getEnvarHash {
 #	$queue 			= 	$ENV{'QUEUE'};
 #	$project 		= 	$ENV{'PROJECT'} if not defined $project or not $project;
 #	$workflow 		= 	$ENV{'WORKFLOW'} if not defined $workflow or not $workflow;
-#	$sgeroot 		=	$self->conf()->getKey("cluster:SGEROOT") if not defined $sgeroot;
+#	$sgeroot 		=	$self->conf()->getKey("scheduler:SGEROOT") if not defined $sgeroot;
 #
 #	#### SET USERNAME AND CLUSTER IF NOT DEFINED
 #	$self->username($username) if not $self->username();

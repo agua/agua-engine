@@ -1,4 +1,6 @@
-use MooseX::Declare;
+package Engine::Common::Stage;
+use Moose::Role;
+use Method::Signatures::Simple;
 
 =head2
 
@@ -37,12 +39,6 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../";
 
-class Engine::Stage with (Util::Logger, 
-	Util::Timer, 
-	Engine::Cluster::Jobs) {
-
-	# Web::Base, 
-
 
 #### EXTERNAL MODULES
 use IO::Pipe;
@@ -53,8 +49,6 @@ use FindBin qw($Bin);
 use Engine::Envar;
 
 # Booleans
-has 'log'			=>  ( isa => 'Int', is => 'rw', default => 0 );  
-has 'printlog'			=>  ( isa => 'Int', is => 'rw', default => 0 );
 
 # Int/Nums
 has 'workflowpid'	=>	( isa => 'Int|Undef', is => 'rw' );
@@ -71,20 +65,19 @@ has 'maxjobs'     	=>  ( isa => 'Int|Undef', is => 'rw' );
 has 'runsleep'     	=>  ( isa => 'Num|Undef', is => 'rw', default => 0.5 );
 
 # String
-has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'cluster', 'description', 'notes'] } );
+has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'description', 'notes'] } );
 has 'username'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'workflowname'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'projectname'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'appname'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'apptype'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
+# has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'outputdir'		=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'scriptfile'	=>  ( isa => 'Str', is => 'rw', required => 1 );
 has 'installdir'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'version'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
 
-has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'userhome'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
@@ -96,32 +89,27 @@ has 'queue_options'	=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'requestor'		=> 	( isa => 'Str', is => 'rw', required	=>	0	);
 has 'stdoutfile'	=>  ( isa => 'Str', is => 'rw' );
 has 'stderrfile'	=>  ( isa => 'Str', is => 'rw' );
-has 'cluster'		=>  ( isa => 'Str|Undef', is => 'rw' );
-has 'qsub'			=>  ( isa => 'Str', is => 'rw' );
-has 'qstat'			=>  ( isa => 'Str', is => 'rw' );
-has 'resultfile'	=>  ( isa => 'Str', is => 'ro', default => sub { "/tmp/result-$$" });
-has 'queued'		=>  ( isa => 'Str', is => 'rw' );
 has 'started'		=>  ( isa => 'Str', is => 'rw' );
 has 'completed'		=>  ( isa => 'Str', is => 'rw' );
 
 # Hash/Array
 has 'envarsub'	=> ( isa => 'Maybe', is => 'rw', lazy => 1, builder => "setEnvarsub" );
-has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
-	return {
-		cluster 		=> 	"CLUSTER",
-		qmasterport 	=> 	"SGE_MASTER_PORT",
-		execdport 		=> 	"SGE_EXECD_PORT",
-		sgecell 		=> 	"SGE_CELL",
-		sgeroot 		=> 	"SGE_ROOT",
-		queue 			=> 	"QUEUE"
-	};
-});
+# has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
+# 	return {
+# 		cluster 		=> 	"CLUSTER",
+# 		qmasterport 	=> 	"SGE_MASTER_PORT",
+# 		execdport 		=> 	"SGE_EXECD_PORT",
+# 		sgecell 		=> 	"SGE_CELL",
+# 		sgeroot 		=> 	"SGE_ROOT",
+# 		queue 			=> 	"QUEUE"
+# 	};
+# });
 
 # Object
 has 'conf'			=> ( isa => 'Conf::Yaml', is => 'rw', required => 1 );
 
 has 'db'			=> ( isa => 'Any', is => 'rw', required => 0 );
-has 'monitor'		=> 	( isa => 'Maybe', is => 'rw', required => 0 );
+# has 'monitor'		=> 	( isa => 'Maybe', is => 'rw', required => 0 );
 has 'stageparameters'=> ( isa => 'ArrayRef', is => 'rw', required => 1 );
 has 'samplehash'   	=>  ( isa => 'HashRef|Undef', is => 'rw', required => 0  );
 
@@ -179,54 +167,6 @@ method BUILD ($args) {
 	#$self->logDebug("$$ args", $args);
 }
 
-method run ($dryrun) {
-=head2
-
-	SUBROUTINE		run
-	
-	PURPOSE
-
-		1. RUN THE STAGE APPLICATION AND UPDATE STATUS TO 'running'
-		
-		2. UPDATE THE PROGRESS FIELD PERIODICALLY (CHECKPROGRESS OR DEFAULT = 10 SECS)
-
-		3. UPDATE STATUS TO 'complete' WHEN EXECUTED APPLICATION HAS FINISHED RUNNING
-		
-=cut
-
-	$self->logDebug("dryrun", $dryrun);
-	
-	#### TO DO: START PROGRESS UPDATER
-
-	#### EXECUTE APPLICATION
-	my $exitcode;
-	my $submit = $self->submit();
-	my $cluster = $self->cluster(); 
-	$self->logDebug("$$ submit", $submit);
-	$self->logDebug("$$ cluster", $cluster);
-
-	#### RUN ON CLUSTER
-	if ( defined $cluster and $cluster and defined $submit and $submit ) {
-		$self->logDebug("$$ Doing self->runOnCluster()");
-		($exitcode) = $self->runOnCluster($dryrun);
-		$self->logDebug("$$ self->runOnCluster() stage run exitcode", $exitcode);
-	}
-	#### RUN LOCALLY	
-	else {
-		$self->logDebug("$$ Doing self->runLocally()");
-		($exitcode) = $self->runLocally($dryrun);
-		$self->logDebug("$$ self->runLocally stage run exitcode (0 means OK)", $exitcode)  if defined $exitcode;
-	}
-	
-	#### REGISTER PROCESS IDS SO WE CAN MONITOR THEIR PROGRESS
-	$self->registerRunInfo();
-
-	#### SET EMPTY IF UNDEFINED
-	$exitcode = "" if not defined $exitcode;
-	
-	return ($exitcode);
-}
-
 
 method getField ($field) {
 	my $username	=	$self->username();
@@ -257,80 +197,6 @@ method getAncestor {
 
 method getStatus {
 	return $self->getField("status");
-}
-
-method runLocally ($dryrun) {
-	my $systemcall = $self->setSystemCall();
-
-	#### REDIRECTION IS 1 IF SYSTEM CALL CONTAINS A ">"
-	my $redirection	=	$self->containsRedirection($systemcall);
-	$self->logDebug("redirection", $redirection);
-	
-	#### SET STDOUT AND STDERR FILES
-	my $stdoutfile = $self->stdoutfile();
-	my $stderrfile = $self->stderrfile();
-	push @$systemcall, " \\\n1> $stdoutfile" if defined $stdoutfile and $redirection ne "stdout";
-	push @$systemcall, " \\\n2> $stderrfile" if defined $stderrfile and $redirection ne "stderr";
-	#$self->logDebug("$$ systemcall: @systemcall");
-
-	#### COMMAND
-	my $command = join " \\\n", @$systemcall;
-	#$self->logDebug("command", $command);
-	
-	#### CLEAN UP BEFOREHAND
-	`rm $stdoutfile` if -f $stdoutfile;
-	`rm $stderrfile` if -f $stderrfile;
-	
-	#### CREATE stdout DIR
-	$self->logDebug("stdoutfile", $stdoutfile);
-	my ($outputdir, $label)	=	$stdoutfile	=~	/^(.+?)\/[^\/]+\/([^\/]+)\.stdout$/;
-	$self->logDebug("outputdir", $outputdir);
-	$self->logDebug("label", $label);
-
-	my $scriptfile	=	"$outputdir/script/$label.sh";
-	my $exitfile	=	"$outputdir/stdout/$label.exit";
-	my $lockfile	=	"$outputdir/stdout/$label.lock";
-	$self->logDebug("scriptfile", $scriptfile);
-	#$self->logDebug("exitfile", $exitfile);
-	#$self->logDebug("lockfile", $lockfile);
-
-	$self->printScriptFile($scriptfile, $command, $exitfile, $lockfile);
-	
-	#### UPDATE STATUS TO 'running'
-	$self->setRunningStatus();
-
-	#### NO BUFFERING
-	$| = 1;
-
-	#### RUN
-	$self->logDebug("PID $$ BEFORE SUBMIT command");
-	`$scriptfile`;
-	$self->logDebug("PID $$ AFTER SUBMIT command");
-	
-	#### DISABLE STDOUT BUFFERING ON PARENT
-	$| = 1;
-	
-	#### PAUSE FOR RESULT FILE TO BE WRITTEN 
-	sleep($self->runsleep());
-	$self->logDebug("PID $$ Finished wait for command to complete");
-	open(RESULT, $exitfile);
-	my $exitcode = <RESULT>;
-	close(RESULT);
-	$exitcode =~ s/\s+$//;
-	#$self->logDebug("PID $$ exitfile", $exitfile);
-	$self->logDebug("PID $$ exitcode", $exitcode);
-	
-	#### SET STATUS TO 'error' IF exitcode IS NOT ZERO
-	if ( defined $exitcode and $exitcode == 0 ) {
-		$self->setStatus('completed') ;
-	}
-	else {
-		$self->setStatus('error');
-	}
-	$exitcode	=~ 	s/\s+$// if defined $exitcode;
-	$self->logDebug("FIRST exitcode", $exitcode);
-	
-	return $exitcode;
 }
 
 method setRunningStatus {
@@ -538,154 +404,6 @@ method setStageJob {
 	#### SET JOB 
 	return $self->setJob([$command], $label, $outputdir);
 }
-
-method runOnCluster {
-=head2
-
-	SUBROUTINE		runOnCluster
-	
-	PURPOSE
-	
-		SUBMIT THE SHELLSCRIPT FOR EXECUTION ON A CLUSTER
-
-=cut
-	$self->logDebug("$$ Stage::runOnCluster()");	;
-
-	#### CLUSTER MONITOR
-	my $monitor		=	$self->monitor();	
-	#### GET MAIN PARAMS
-	my $username 	= $self->username();
-	my $projectname 	= $self->projectname();
-	my $workflownumber 	= $self->workflownumber();
-	my $workflowname 	= $self->workflowname();
-	my $appnumber 		= $self->appnumber();
-	my $queue 		= $self->queue();
-	my $cluster		= $self->cluster();
-	my $qstat		= $self->qstat();
-	my $qsub		= $self->qsub();
-	my $workflowpid = $self->workflowpid();
-    $self->logDebug("$$ cluster", $cluster);
-
-	#### SET DEFAULTS
-	$queue = '' if not defined $queue;
-
-	#### GET AGUA DIRECTORY FOR CREATING STDOUTFILE LATER
-	my $aguadir 	= $self->conf()->getKey("core:AGUADIR");
-
-	#### GET FILE ROOT
-	my $fileroot = $self->util()->getFileroot($username);
-
-	#### GET ARGUMENTS ARRAY
-  my $stageparameters =	$self->stageparameters();
-  #$self->logDebug("$$ Arguments", $stageparameters);
-  $stageparameters =~ s/\'/"/g;
-	my $arguments = $self->setArguments($stageparameters);    
-
-	#### GET PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
-	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$installdir/lib";
-	
-	#### SET EXECUTOR
-	my $executor	.=	"export PERL5LIB=$perl5lib; ";
-	$executor 		.= 	$self->executor() if $self->executor();
-	$self->logDebug("$$ self->executor(): " . $self->executor());
-
-	#### SET APPLICATION
-	my $application = $self->installdir() . "/" . $self->location();	
-	$self->logDebug("$$ application", $application);
-
-	#### ADD THE INSTALLDIR IF THE LOCATION IS NOT AN ABSOLUTE PATH
-	$self->logDebug("$$ installdir", $installdir);
-	if ( $application !~ /^\// and $application !~ /^[A-Z]:/i ) {
-		$application = "$installdir/bin/$application";
-		$self->logDebug("$$ Added installdir to stage_arguments->{location}: " . $application);
-	}
-
-	#### SET SYSTEM CALL
-	my @systemcall = ($application, @$arguments);
-	my $command = "$executor @systemcall";
-	
-  #### GET OUTPUT DIR
-  my $outputdir = $self->outputdir();
-  $self->logDebug("$$ outputdir", $outputdir);
-
-	#### SET JOB NAME AS project-workflow-appnumber
-	my $label =	$projectname;
-	$label .= "-" . $workflownumber;
-	$label .= "-" . $workflowname;
-	$label .= "-" . $appnumber;
-    $self->logDebug("$$ label", $label);
-
-	#### SET *** BATCH *** JOB 
-	my $job = $self->setJob([$command], $label, $outputdir);
-	
-	#### GET FILES
-	my $commands = $job->{commands};
-	my $scriptfile = $job->{scriptfile};
-	my $stdoutfile = $job->{stdoutfile};
-	my $stderrfile = $job->{stderrfile};
-	my $lockfile = $job->{lockfile};
-	
-	#### PRINT SHELL SCRIPT	
-	$self->printSgeScriptfile($scriptfile, $commands, $label, $stdoutfile, $stderrfile, $lockfile);
-	$self->logDebug("$$ scriptfile", $scriptfile);
-
-	#### SET QUEUE
-	$self->logDebug("$$ queue", $queue);
-	$job->{queue} = $self->queue();
-	
-	#### SET QSUB
-	$self->logDebug("$$ qsub", $qsub);
-	$job->{qsub} = $self->qsub();
-
-	#### SET SGE ENVIRONMENT VARIABLES
-	$job->{envars} = $self->envars() if $self->envars();
-
-	#### SUBMIT TO CLUSTER AND GET THE JOB ID 
-	my ($jobid, $error)  = $monitor->submitJob($job);
-	$self->logDebug("$$ jobid", $jobid);
-	$self->logDebug("$$ error", $error);
-
-	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
-
-	#### SET STAGE PID
-	$self->setStagePid($jobid);
-	
-	#### SET QUEUED
-	$self->setQueued();
-
-	#### GET JOB STATUS
-	$self->logDebug("$$ Monitoring job...");
-	my $jobstatus = $monitor->jobStatus($jobid);
-	$self->logDebug("$$ jobstatus", $jobstatus);
-
-	#### SET SLEEP
-	my $sleep = $self->conf()->getKey("scheduler:SLEEP");
-	$sleep = 5 if not defined $sleep;
-	$self->logDebug("$$ sleep", $sleep);
-	
-	my $set_running = 0;
-	while ( $jobstatus ne "completed" and $jobstatus ne "error" ) {
-		sleep($sleep);
-		$jobstatus = $monitor->jobStatus($jobid);
-		$self->setRunning() if $jobstatus eq "running" and not $set_running;
-		$set_running = 1 if $jobstatus eq "running";
-
-		$self->setStatus('completed') if $jobstatus eq "completed";
-		$self->setStatus('error') if $jobstatus eq "error";
-	}
-	$self->logDebug("$$ jobstatus", $jobstatus);
-
-	#### PAUSE SEEMS LONG ENOUGH FOR qacct INFO TO BE READY
-	my $PAUSE = 2;
-	$self->logDebug("$$ Sleeping $PAUSE before self->setRunTimes(jobid)");
-	sleep($PAUSE);
-	$self->setRunTimes($jobid);
-
-	$self->logDebug("$$ Completed");
-
-	return 0;
-}	#	runOnCluster
 
 method updateStatus ($set, $username, $projectname, $workflowname) {
 	
@@ -1176,68 +894,4 @@ method _toString () {
 }
 
 
-#### ENVAR
-method setEnvarsub {
-	return *_envarSub;
-}
-	
-method _envarSub ($envars, $values, $parent) {
-	$self->logDebug("parent: $parent");
-	$self->logDebug("envars", $envars);
-	$self->logDebug("values", $values);
-	#$self->logDebug("SELF->CONF", $self->conf());
-	
-	#### SET USERNAME AND CLUSTER IF NOT DEFINED
-	if ( not defined $values->{sgeroot} ) {
-		$values->{sgeroot} = $self->conf()->getKey("scheduler:SGEROOT");
-	}
-	
-	#### SET CLUSTER
-	if ( not defined $values->{cluster} and defined $values->{sgecell}) {
-		$values->{cluster} = $values->{sgecell};
-	}
-	
-	#### SET QMASTERPORT
-	if ( not defined $values->{qmasterport}
-		or (
-			defined $values->{username}
-			and $values->{username}
-			and defined $values->{cluster}
-			and $values->{cluster}
-			and defined $self->table()->db()
-			and defined $self->table()->db()->dbh()			
-		)
-	) {
-		$values->{qmasterport} = $parent->getQueueMasterPort($values->{username}, $values->{cluster});
-		$values->{execdport} 	= 	$values->{qmasterport} + 1 if defined $values->{qmasterport};
-		$self->logDebug("values", $values);
-	}
-	
-	$values->{queue} = $parent->setQueueName($values);
-	$self->logDebug("values", $values);
-	
-	return $self->values($values);	
-}
-
-method getQueueMasterPort ($username, $cluster) {
-	my $query = qq{SELECT qmasterport
-FROM clustervars
-WHERE username = '$username'
-AND cluster = '$cluster'};
-	$self->logDebug("query", $query);
-		
-	return $self->table()->db()->query($query);
-}
-
-method setQueueName ($values) {
-	$self->logDebug("values", $values);
-	return if not defined $values->{username};
-	return if not defined $values->{projectname};
-	return if not defined $values->{workflowname};
-	
-	return $values->{username} . "." . $values->{projectname} . "." . $values->{workflowname};
-}
-
-
-} #### Engine::Stage
-
+1;

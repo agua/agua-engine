@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Test::Engine::Instance extends Engine::Instance with Test::Common {
+class Test::Engine::Cloud::Instance extends Engine::Cloud::Instance with Test::Common {
 #### EXTERNAL MODULES
 use Data::Dumper;
 use Test::More;
@@ -144,4 +144,4 @@ method testIsKey {
 	ok(! $self->isKey(undef), "isKey    undefined attribute");
 }
 
-}   #### Test::Engine::Instance
+}   #### Test::Engine::Cloud::Instance

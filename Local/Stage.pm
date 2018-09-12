@@ -2,31 +2,21 @@ use MooseX::Declare;
 
 =head2
 
-	PACKAGE		Engine::Stage
+	PACKAGE		Engine::Local::Stage
 	
 	PURPOSE:
 	
-		A Stage IS ONE STEP IN A WORKFLOW.
+		A STAGE IS ONE STEP IN A WORKFLOW. EACH 
 		
-		IT HAS THE FOLLOWING CHARACTERISTICS:
+		STAGE DOES THE FOLLOWING:
 		
-		1. EACH Stage RUNS ITSELF AND LOGS ITS
+		1.	RUNS AN ENTRY IN THE stage DATABASE TABLE
+
+		2. LOGS ITS STATUS TO THE stage DATABASE TABLE
 		
-			STATUS TO THE stage DATABASE TABLE.
-		
-		2. A Stage WILL RUN LOCALLY BY DEFAULT.
-		
-		3. IF THE submit VARIABLE IS NOT ZERO AND
-		
-			cluster VARIABLE IS NOT EMPTY, IT
-			
-			WILL RUN ON A CLUSTER.
-	
-		3. EACH Stage DYNAMICALLY SETS ITS
-		
-			STDOUT, STDERR, INPUT AND OUTPUT
-		
-			FILES.
+		3. DYNAMICALLY SETS STDOUT, STDERR, INPUT 
+
+			AND OUTPUT FILES.
 		
 =cut 
 
@@ -37,9 +27,9 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../";
 
-class Engine::Stage with (Util::Logger, 
-	Util::Timer, 
-	Engine::Cluster::Jobs) {
+class Engine::Local::Stage with (Engine::Common::Stage,
+	Util::Logger, 
+	Util::Timer) {
 
 	# Web::Base, 
 
@@ -53,125 +43,14 @@ use FindBin qw($Bin);
 use Engine::Envar;
 
 # Booleans
-has 'log'			=>  ( isa => 'Int', is => 'rw', default => 0 );  
-has 'printlog'			=>  ( isa => 'Int', is => 'rw', default => 0 );
 
 # Int/Nums
-has 'workflowpid'	=>	( isa => 'Int|Undef', is => 'rw' );
-has 'stagepid'		=>	( isa => 'Int|Undef', is => 'rw' );
-has 'stagejobid'	=>	( isa => 'Int|Undef', is => 'rw' );
-has 'appnumber'		=>  ( isa => 'Str', is => 'rw');
-has 'ancestor'		=>  ( isa => 'Str|Undef', is => 'rw');
-has 'successor'		=>  ( isa => 'Str|Undef', is => 'rw');
-has 'workflownumber'=>  ( isa => 'Str', is => 'rw');
-has 'start'     	=>  ( isa => 'Int', is => 'rw' );
-has 'submit'     	=>  ( isa => 'Int|Undef', is => 'rw' );
-has 'slots'     	=>  ( isa => 'Int|Undef', is => 'rw' );
-has 'maxjobs'     	=>  ( isa => 'Int|Undef', is => 'rw' );
-has 'runsleep'     	=>  ( isa => 'Num|Undef', is => 'rw', default => 0.5 );
 
 # String
-has 'fields'    => ( isa => 'ArrayRef[Str|Undef]', is => 'rw', default => sub { ['owner', 'appname', 'appnumber', 'apptype', 'location', 'submit', 'executor', 'prescript', 'cluster', 'description', 'notes'] } );
-has 'username'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'workflowname'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'projectname'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'appname'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'apptype'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'outputdir'		=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'scriptfile'	=>  ( isa => 'Str', is => 'rw', required => 1 );
-has 'installdir'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'version'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
-has 'scheduler'   	=>  ( isa => 'Str|Undef', is => 'rw', default	=>	"local" );
-
-has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
-has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'userhome'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'executor'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
-has 'prescript'		=> 	( isa => 'Str|Undef', is => 'rw', default => undef );
-has 'location'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-
-has 'setuid'		=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'queue_options'	=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'requestor'		=> 	( isa => 'Str', is => 'rw', required	=>	0	);
-has 'stdoutfile'	=>  ( isa => 'Str', is => 'rw' );
-has 'stderrfile'	=>  ( isa => 'Str', is => 'rw' );
-has 'cluster'		=>  ( isa => 'Str|Undef', is => 'rw' );
-has 'qsub'			=>  ( isa => 'Str', is => 'rw' );
-has 'qstat'			=>  ( isa => 'Str', is => 'rw' );
-has 'resultfile'	=>  ( isa => 'Str', is => 'ro', default => sub { "/tmp/result-$$" });
-has 'queued'		=>  ( isa => 'Str', is => 'rw' );
-has 'started'		=>  ( isa => 'Str', is => 'rw' );
-has 'completed'		=>  ( isa => 'Str', is => 'rw' );
 
 # Hash/Array
-has 'envarsub'	=> ( isa => 'Maybe', is => 'rw', lazy => 1, builder => "setEnvarsub" );
-has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
-	return {
-		cluster 		=> 	"CLUSTER",
-		qmasterport 	=> 	"SGE_MASTER_PORT",
-		execdport 		=> 	"SGE_EXECD_PORT",
-		sgecell 		=> 	"SGE_CELL",
-		sgeroot 		=> 	"SGE_ROOT",
-		queue 			=> 	"QUEUE"
-	};
-});
 
 # Object
-has 'conf'			=> ( isa => 'Conf::Yaml', is => 'rw', required => 1 );
-
-has 'db'			=> ( isa => 'Any', is => 'rw', required => 0 );
-has 'monitor'		=> 	( isa => 'Maybe', is => 'rw', required => 0 );
-has 'stageparameters'=> ( isa => 'ArrayRef', is => 'rw', required => 1 );
-has 'samplehash'   	=>  ( isa => 'HashRef|Undef', is => 'rw', required => 0  );
-
-has 'util'		=>	(
-	is 			=>	'rw',
-	isa 		=>	'Util::Main',
-	lazy		=>	1,
-	builder	=>	"setUtil"
-);
-
-method setUtil () {
-	my $util = Util::Main->new({
-		conf			=>	$self->conf(),
-		log				=>	$self->log(),
-		printlog	=>	$self->printlog()
-	});
-
-	$self->util($util);	
-}
-
-has 'envar'	=> ( 
-	is => 'rw',
-	isa => 'Envar',
-	lazy => 1,
-	builder => "setEnvar" 
-);
-
-method setEnvar {
-	my $customvars	=	$self->can("customvars") ? $self->customvars() : undef;
-	my $envarsub	=	$self->can("envarsub") ? $self->envarsub() : undef;
-	$self->logDebug("customvars", $customvars);
-	$self->logDebug("envarsub", $envarsub);
-	
-	my $envar = Envar->new({
-		db			=>	$self->table()->db(),
-		conf		=>	$self->conf(),
-		customvars	=>	$customvars,
-		envarsub	=>	$envarsub,
-		parent		=>	$self
-	});
-	
-	$self->envar($envar);
-}
-
-has 'table'		=>	(
-	is 			=>	'rw',
-	isa 		=>	'Table::Main',
-	lazy		=>	1,
-	builder	=>	"setTable"
-);
 
 
 method BUILD ($args) {
@@ -198,68 +77,9 @@ method run ($dryrun) {
 	
 	#### TO DO: START PROGRESS UPDATER
 
-	#### EXECUTE APPLICATION
-	my $exitcode;
-	my $submit = $self->submit();
-	my $cluster = $self->cluster(); 
-	$self->logDebug("$$ submit", $submit);
-	$self->logDebug("$$ cluster", $cluster);
-
-	#### RUN ON CLUSTER
-	if ( defined $cluster and $cluster and defined $submit and $submit ) {
-		$self->logDebug("$$ Doing self->runOnCluster()");
-		($exitcode) = $self->runOnCluster($dryrun);
-		$self->logDebug("$$ self->runOnCluster() stage run exitcode", $exitcode);
-	}
-	#### RUN LOCALLY	
-	else {
-		$self->logDebug("$$ Doing self->runLocally()");
-		($exitcode) = $self->runLocally($dryrun);
-		$self->logDebug("$$ self->runLocally stage run exitcode (0 means OK)", $exitcode)  if defined $exitcode;
-	}
-	
 	#### REGISTER PROCESS IDS SO WE CAN MONITOR THEIR PROGRESS
 	$self->registerRunInfo();
 
-	#### SET EMPTY IF UNDEFINED
-	$exitcode = "" if not defined $exitcode;
-	
-	return ($exitcode);
-}
-
-
-method getField ($field) {
-	my $username	=	$self->username();
-	my $projectname	=	$self->projectname();
-	my $workflowname	=	$self->workflowname();
-	my $appnumber	=	$self->appnumber();
-
-	my $query = qq{SELECT $field
-FROM stage
-WHERE username='$username'
-AND projectname='$projectname'
-AND workflowname='$workflowname'
-AND appnumber='$appnumber'};
-	#$self->logDebug("query", $query);
-	my $successor = $self->table()->db()->query($query);
-	#$self->logDebug("successor", $successor);
-	
-	return $successor;	
-}
-
-method getSuccessor {
-	return $self->getField("successor");
-}
-
-method getAncestor {
-	return $self->getField("successor");
-}
-
-method getStatus {
-	return $self->getField("status");
-}
-
-method runLocally ($dryrun) {
 	my $systemcall = $self->setSystemCall();
 
 	#### REDIRECTION IS 1 IF SYSTEM CALL CONTAINS A ">"
@@ -331,15 +151,6 @@ method runLocally ($dryrun) {
 	$self->logDebug("FIRST exitcode", $exitcode);
 	
 	return $exitcode;
-}
-
-method setRunningStatus {
-	my $now = $self->table()->db()->now();
-	my $set = qq{status='running',
-started=$now,
-queued=$now,
-completed='0000-00-00 00:00:00'};
-	$self->setFields($set);
 }
 
 method setSystemCall {
@@ -1064,6 +875,15 @@ completed = '$completed'};
 
 	$self->setFields($set);
 }
+method setRunningStatus {
+	my $now = $self->table()->db()->now();
+	my $set = qq{status='running',
+started=$now,
+queued=$now,
+completed='0000-00-00 00:00:00'};
+	$self->setFields($set);
+}
+
 method setStatus ($status) {	
 #### SET THE status FIELD IN THE stage TABLE FOR THIS STAGE
     $self->logDebug("$$ status", $status);

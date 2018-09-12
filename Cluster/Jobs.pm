@@ -13,7 +13,7 @@ use Method::Signatures::Simple;
 =cut
 
 # Int
-has 'submit'	=> ( isa => 'Int|Undef', is => 'rw', default => 0 );
+# has 'submit'	=> ( isa => 'Int|Undef', is => 'rw', default => 0 );
 has 'starttime' => ( isa => 'Int|Undef', is => 'rw', default => sub { time() });
 
 # String
@@ -23,15 +23,15 @@ has 'queue'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'walltime'	=> ( isa => 'Str|Undef', is => 'rw', default => 24 );
 has 'cpus'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'qstat'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'qsub'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'maxjobs'	=> ( isa => 'Str|Undef', is => 'rw'	);
+# has 'qsub'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+# has 'maxjobs'	=> ( isa => 'Str|Undef', is => 'rw'	);
 has 'sleep'		=> ( isa => 'Str|Undef', is => 'rw', default => 10 );
 has 'cleanup'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'dot'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'verbose'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 
 # Hash/Array
-has 'envarsub'	=> ( isa => 'Maybe', is => 'rw', lazy => 1, builder => "setEnvarsub" );
+# has 'envarsub'	=> ( isa => 'Maybe', is => 'rw', lazy => 1, builder => "setEnvarsub" );
 has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
 	return {
 		cluster 		=> 	"CLUSTER",
@@ -46,32 +46,32 @@ has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
 # 	Objects
 has 'batchstats'=> ( isa => 'ArrayRef|Undef', is => 'rw', default => sub { [] });
 has 'command'	=> ( isa => 'ArrayRef|Undef', is => 'rw' );
-has 'conf'		=> ( isa => 'Conf::Yaml|Undef', is => 'rw' );
+# has 'conf'		=> ( isa => 'Conf::Yaml|Undef', is => 'rw' );
 has 'monitor'	=> 	( isa => 'Maybe|Undef', is => 'rw', required => 0 );
 
-has 'envar'	=> ( 
-	is => 'rw',
-	isa => 'Envar',
-	lazy => 1,
-	builder => "setEnvar" 
-);
+# has 'envar'	=> ( 
+# 	is => 'rw',
+# 	isa => 'Envar',
+# 	lazy => 1,
+# 	builder => "setEnvar" 
+# );
 
-method setEnvar {
-	my $customvars	=	$self->can("customvars") ? $self->customvars() : undef;
-	my $envarsub	=	$self->can("envarsub") ? $self->envarsub() : undef;
-	$self->logDebug("customvars", $customvars);
-	$self->logDebug("envarsub", $envarsub);
+# method setEnvar {
+# 	my $customvars	=	$self->can("customvars") ? $self->customvars() : undef;
+# 	my $envarsub	=	$self->can("envarsub") ? $self->envarsub() : undef;
+# 	$self->logDebug("customvars", $customvars);
+# 	$self->logDebug("envarsub", $envarsub);
 	
-	my $envar = Envar->new({
-		db			=>	$self->table()->db(),
-		conf		=>	$self->conf(),
-		customvars	=>	$customvars,
-		envarsub	=>	$envarsub,
-		parent		=>	$self
-	});
+# 	my $envar = Envar->new({
+# 		db			=>	$self->table()->db(),
+# 		conf		=>	$self->conf(),
+# 		customvars	=>	$customvars,
+# 		envarsub	=>	$envarsub,
+# 		parent		=>	$self
+# 	});
 	
-	$self->envar($envar);
-}
+# 	$self->envar($envar);
+# }
 
 
 
@@ -393,13 +393,7 @@ method executeLocal ( $jobs, $label ) {
 		chdir($outputdir) or die "Can't move to output subdir: $outputdir/$counter\n";	
 		
 		my $commands = $job->{commands};
-
-		#### REDIRECT STDOUT AND STDERR IF stdoutfile DEFINED
-		my $stdoutfile = $job->{stdoutfile};
-		my $stderrfile = $job->{stderrfile};
 		my $lockfile = $job->{lockfile};
-		my $oldout;
-		my $olderr;
 
 		#### execute COMMANDS
 		print `date > $lockfile`;
@@ -412,16 +406,8 @@ method executeLocal ( $jobs, $label ) {
 		
 		my $whoami = `whoami`;
 		$self->logDebug("whoami", $whoami);
-
-		##### END REDIRECTION OF STDOUT AND STDERR
-		#if ( defined $stdoutfile )
-		#{
-		#	open STDOUT, ">&", $oldout if defined $stdoutfile;
-		#	open STDERR, ">&", $olderr if defined $stderrfile;
-		#}
 	}
 	
-
 	$self->logDebug("Completed");
 
 	return $scriptfiles;

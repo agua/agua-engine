@@ -64,7 +64,7 @@ use File::Path;
 
 #### INTERNAL MODULES
 use DBase::Factory;
-use Engine::Instance;
+use Engine::Cloud::Instance;
 use Util::Main;
 
 #### Boolean
@@ -108,16 +108,16 @@ has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
 has 'ssh'			=> ( isa => 'Util::Ssh', is => 'rw', required	=>	0	);
 has 'conf'		=> ( isa => 'Conf::Yaml', is => 'rw', required => 0 );
 has 'db'	=> ( isa => 'Any', is => 'rw', required => 0 );
-has 'head' 	=> (
-	is =>	'rw',
-	'isa' => 'Engine::Instance',
-	default	=>	sub { Engine::Instance->new();	}
-);
-has 'master' 	=> (
-	is =>	'rw',
-	'isa' => 'Engine::Instance',
-	default	=>	sub { Engine::Instance->new();	}
-);
+# has 'head' 	=> (
+# 	is =>	'rw',
+# 	'isa' => 'Engine::Cloud::Instance',
+# 	default	=>	sub { Engine::Cloud::Instance->new();	}
+# );
+# has 'master' 	=> (
+# 	is =>	'rw',
+# 	'isa' => 'Engine::Cloud::Instance',
+# 	default	=>	sub { Engine::Cloud::Instance->new();	}
+# );
 
 has 'util'		=>	(
 	is 			=>	'rw',
@@ -150,7 +150,7 @@ method setEnvar {
 	$self->logDebug("envarsub", $envarsub);
 	
 	my $envar = Envar->new({
-		db			=>	$self->table()->db(),
+		table		=>	$self->table(),
 		conf		=>	$self->conf(),
 		customvars	=>	$customvars,
 		envarsub	=>	$envarsub,
@@ -160,9 +160,31 @@ method setEnvar {
 	$self->envar($envar);
 }
 
+# has 'table'		=>	(
+# 	is 			=>	'rw',
+# 	isa 		=>	'Table::Main',
+# 	lazy		=>	1,
+# 	builder	=>	"setTable"
+# );
+
+# method setTable {
+# 	$self->logCaller("");
+# 	print "Engine::Cluster::Monitor::SGE   DOING setTable\n";
+# 	exit;
+
+# 	my $table = Table::Main->new({
+# 		conf			=>	$self->conf(),
+# 		log				=>	$self->log(),
+# 		printlog	=>	$self->printlog()
+# 	});
+
+# 	$self->table($table);	
+# }
 
 
 method BUILD ($args) {
+	$self->log(5);
+	$self->logCaller("");
 	$self->logDebug("DOING self->loadArgs()");
 	$self->loadArgs($args);
 	
@@ -189,6 +211,15 @@ method loadArgs ($args) {
 	}
 
     $self->logDebug("Completed");
+}
+
+method unTaint ($input) {
+  return if not defined $input;
+
+  $input =~ s/;.*$//g;
+  $input =~ s/`.*$//g;
+
+  return $input;
 }
 
 method load ($args) {
@@ -273,30 +304,30 @@ method initialise () {
 	$logfile = $self->getMonitorLogfile($adminuser, $cluster) if $adminkey;
 	$self->logDebug("logfile", $logfile);
 
-	#### SET CLUSTER INSTANCES LOG
-	$self->head()->logfile($logfile);
-	$self->head()->log($self->log());
-	$self->head()->printlog($self->printlog());
-	$self->master()->logfile($logfile);
-	$self->master()->log($self->log());
-	$self->master()->printlog($self->printlog());
+	# #### SET CLUSTER INSTANCES LOG
+	# $self->head()->logfile($logfile);
+	# $self->head()->log($self->log());
+	# $self->head()->printlog($self->printlog());
+	# $self->master()->logfile($logfile);
+	# $self->master()->log($self->log());
+	# $self->master()->printlog($self->printlog());
 	
-	#### SET HEADNODE OPS LOG
-	$self->head()->ops()->logfile($logfile);	
-	$self->head()->ops()->log($self->log());
-	$self->head()->ops()->printlog($self->printlog());
+	# #### SET HEADNODE OPS LOG
+	# $self->head()->ops()->logfile($logfile);	
+	# $self->head()->ops()->log($self->log());
+	# $self->head()->ops()->printlog($self->printlog());
 
-	#### SET HEADNODE OPS CONF
-	my $conf 	= 	$self->conf();
-	$self->head()->ops()->conf($conf);	
+	# #### SET HEADNODE OPS CONF
+	# my $conf 	= 	$self->conf();
+	# $self->head()->ops()->conf($conf);	
 
-	#### SET MASTER OPS LOG
-	$self->master()->ops()->logfile($logfile);	
-	$self->master()->ops()->log($self->log());
-	$self->master()->ops()->printlog($self->printlog());
+	# #### SET MASTER OPS LOG
+	# $self->master()->ops()->logfile($logfile);	
+	# $self->master()->ops()->log($self->log());
+	# $self->master()->ops()->printlog($self->printlog());
 
-	#### SET MASTER OPS CONF
-	$self->master()->ops()->conf($conf);	
+	# #### SET MASTER OPS CONF
+	# $self->master()->ops()->conf($conf);	
 	
 	#### SET qstat EXECUTABLE LOCATION
 	$self->logDebug("Doing self->setQstat()");
@@ -315,8 +346,8 @@ method getMonitorLogfile ($username, $cluster) {
 method setQstat {
 	my $conf = $self->conf();
 
-	my $qstat = $conf->getKey("cluster:QSTAT");
-	$qstat = $conf->getKey("cluster:QSTAT") if not defined $qstat;
+	my $qstat = $conf->getKey("scheduler:QSTAT");
+	$qstat = $conf->getKey("scheduler:QSTAT") if not defined $qstat;
 	$self->logError("sgeroot not defined") and exit if not defined $qstat;
 
 	$self->qstat($qstat);	
@@ -330,7 +361,7 @@ method qacct ($username, $cluster, $jobid) {
 
 	my $envars = $self->envars()->{tostring};
 	my $keypairfile = $self->setKeypairFile($username);
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	$self->_setSsh("root", $masterip, $keypairfile);
 	my $sgebin = $self->master()->ops()->getSgeBinRoot();
 
@@ -355,11 +386,11 @@ method setEnv {
 
 	my $conf = $self->conf();
 	my $sgeroot = $conf->getKey("agua:SGEROOT");
-	$sgeroot = $conf->getKey("cluster:SGEROOT") if not defined $sgeroot;
-	my $qmasterport = $conf->getKey("cluster:SGEQMASTERPORT");
-	$qmasterport = $conf->getKey("cluster:SGEQMASTERPORT") if not defined $qmasterport;
-	my $execdport = $conf->getKey("cluster:SGEEXECDPORT");
-	$execdport = $conf->getKey("cluster:SGEEXECDPORT") if not defined $execdport;
+	$sgeroot = $conf->getKey("scheduler:SGEROOT") if not defined $sgeroot;
+	my $qmasterport = $conf->getKey("scheduler:SGEQMASTERPORT");
+	$qmasterport = $conf->getKey("scheduler:SGEQMASTERPORT") if not defined $qmasterport;
+	my $execdport = $conf->getKey("scheduler:SGEEXECDPORT");
+	$execdport = $conf->getKey("scheduler:SGEEXECDPORT") if not defined $execdport;
 
 	#### CHECK INPUTS
 	$self->logError("sgeroot not defined") and exit if not defined $sgeroot;
@@ -423,7 +454,7 @@ method submitJob ($job) {
 	$self->logDebug("command", $command);
 
 	#### SUBMIT JOB
-	my $output = `$command`;
+	my $output = `$command` || "";
 	$self->logDebug("AFTER SUBMIT");
 	#wait;
 	$output =~ s/\n/ /g;
@@ -942,7 +973,7 @@ method _envarSub ($envars, $values, $parent) {
 	
 	#### SET USERNAME AND CLUSTER IF NOT DEFINED
 	if ( not defined $values->{sgeroot} ) {
-		$values->{sgeroot} = $self->conf()->getKey("cluster:SGEROOT");
+		$values->{sgeroot} = $self->conf()->getKey("scheduler:SGEROOT");
 	}
 	
 	#### SET CLUSTER

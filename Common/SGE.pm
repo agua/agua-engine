@@ -585,7 +585,7 @@ method checkHeadnodeSge ( $execdport ) {
 method setHeadnodeActQmaster ( $cluster, $masterip ) {
 	$self->logDebug("cluster", $cluster);
 	$self->logDebug("masterip", $masterip);
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $act_qmaster =  "$sgeroot/$cluster/common/act_qmaster";
 	$self->head()->ops()->toFile($act_qmaster, $masterip);
 }
@@ -667,7 +667,7 @@ method setHeadnodeSubmit ( $cluster, $qmasterport, $execdport, $oldname, $newnam
 ### Add new master IP (long dns name) to submit hosts and admin hosts lists
 method sgeEnvars ( $cluster, $qmasterport, $execdport ) {
 
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $envars = qq{export SGE_ROOT=$sgeroot; };
 	$envars .= qq{export SGE_CELL=$cluster; };
 	$envars .= qq{export SGE_QMASTER_PORT=$qmasterport; };
@@ -680,7 +680,7 @@ method sgeEnvars ( $cluster, $qmasterport, $execdport ) {
 ### PRINT MASTER INTERNAL DNS_NAME TO SGE_ROOT/SGE_CELL/common/act_qmaster
 method getActQmaster ( $cluster ) {
 	$self->logDebug("cluster", $cluster);
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $act_qmaster =  "$sgeroot/$cluster/common/act_qmaster";
 	my $command = "cat $act_qmaster";
 	my $masterip = `$command`;
@@ -938,7 +938,7 @@ method setMasterEtcHosts {
 
 method setMasterActQmaster ( $cluster, $dnsname ) {
 
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $act_qmaster = "$sgeroot/$cluster/common/act_qmaster";
 	$self->logDebug("act_qmaster : $act_qmaster ");
 	$self->master()->ops()->toFile($act_qmaster, $dnsname);
@@ -1182,7 +1182,7 @@ method rebootInstance ( $instance ) {
 ### PRINT MASTER INTERNAL DNS_NAME TO SGE_ROOT/SGE_CELL/common/act_qmaster
 method getHeadnodeMasterInfo ( $cluster ) {
 	$self->logDebug("cluster", $cluster);
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $qmaster_info =  "$sgeroot/$cluster/qmaster_info";
 	$self->logDebug("qmaster_info ", $qmaster_info);
 
@@ -1225,7 +1225,7 @@ method _setHeadnodeMasterInfo ( $cluster, $internalfqdn, $internalip, $instancei
 	$self->logError("cluster is not defined") and exit if not defined $cluster;
 	$self->logError("internalfqdn is not defined") and exit if not defined $internalfqdn;
 
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	my $qmaster_infofile = "$sgeroot/$cluster/qmaster_info";
 	$self->logDebug("qmaster_infofile ", $qmaster_infofile);
 
@@ -1274,7 +1274,7 @@ method updateHeadnodeInSge ( $oldheadname, $newheadname ) {
 	$self->setDbh() if not defined $self->table()->db();
 	my $query = qq{SELECT * from clustervars ORDER BY username};
 	my $clusterhashes = $self->table()->db()->queryhasharray($query);
-	my $sgeroot = $self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
 	foreach my $clusterhash ( @$clusterhashes )
 	{
 		my $cluster 	= $clusterhash->{cluster};
@@ -1453,7 +1453,7 @@ method getSgePorts {
 	#### REINITIALISING ITS 
 	my $username 	= 	$self->username();
 	my $cluster 	= 	$self->cluster();
-	my $sgeroot 	=	$self->conf()->getKey("cluster:SGEROOT");
+	my $sgeroot 	=	$self->conf()->getKey("scheduler:SGEROOT");
 	
 	my $query = qq{SELECT qmasterport
 FROM clustervars
