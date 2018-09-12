@@ -162,8 +162,9 @@ method executeWorkflow ($data) {
 	my $start					=	$data->{start};
 	my $stop					=	$data->{stop};
 	my $dryrun				=	$data->{dryrun};
+	my $queue					=	$data->{queue};
 	my $scheduler			=	$self->conf()->getKey("core:SCHEDULER");
-	my $force 		=	$self->force() || $data->{force};
+	my $force 				=	$self->force() || $data->{force};
 	$self->logDebug("force", $force);
 	$self->force($force);
 	
@@ -178,18 +179,6 @@ method executeWorkflow ($data) {
 	$self->logDebug("dryrun", $dryrun);
 	$self->logDebug("scheduler", $scheduler);
 
-	#### SET SCHEDULER
-	$self->scheduler($scheduler);
-
-	$data = {
-		username				=>	$username,
-		projectname					=>	$projectname,
-		workflowname				=>	$workflowname,
-		workflownumber	=> 	$workflownumber,
-		start						=>	$start,
-		samplehash			=>	$samplehash
-	};
-
 	#### QUIT IF INSUFFICIENT INPUTS
 	if ( not $username or not $projectname or not $workflowname or not $workflownumber or not defined $start ) {
 		my $error = '';
@@ -203,12 +192,24 @@ method executeWorkflow ($data) {
 		return;
 	}
 
+	#### SET SCHEDULER
+	$self->scheduler($scheduler);
+
+	$data = {
+		username				=>	$username,
+		projectname			=>	$projectname,
+		workflowname		=>	$workflowname,
+		workflownumber	=> 	$workflownumber,
+		start						=>	$start,
+		samplehash			=>	$samplehash
+	};
+
 	#### SET WORKFLOW 'RUNNING'
 	$self->updateWorkflowStatus($username, $cluster, $projectname, $workflowname, "running");
 
 	#### SET STAGES
 	$self->logDebug("DOING self->setStages");
-	my $stages = $self->setStages($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler);
+	my $stages = $self->setStages($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $queue);
 	$self->logDebug("no. stages", scalar(@$stages));
 	if ( scalar(@$stages) == 0 ) {
 		print "Skipping workflow: $workflowname\n";
@@ -220,7 +221,7 @@ method executeWorkflow ($data) {
 	my $status;
 
 	$self->logDebug("DOING self->runSge");
-	my $success	=	$self->runSge($stages, $username, $projectname, $workflowname, $workflownumber, $cluster);
+	my $success	=	$self->runWorkflow($stages, $username, $projectname, $workflowname, $workflownumber, $cluster);
 	$self->logDebug("success", $success);
 
 	#### SET WORKFLOW STATUS
@@ -243,7 +244,7 @@ method executeWorkflow ($data) {
 }
 
 
-method runSge ($stages, $username, $projectname, $workflowname, $workflownumber, $cluster) {	
+method runWorkflow ($stages, $username, $projectname, $workflowname, $workflownumber, $cluster) {	
 #### RUN STAGES ON SUN GRID ENGINE
 
 	my $sgeroot	=	$self->conf()->getKey("scheduler:SGEROOT");
@@ -537,7 +538,7 @@ method runStages ($stages, $dryrun) {
 	return 1;
 }
 
-method setStages ($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler) {
+method setStages ($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $queue) {
 	$self->logGroup("Engine::Cluster::Workflow::setStages");
 	$self->logDebug("username", $username);
 	$self->logDebug("cluster", $cluster);
@@ -589,10 +590,6 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	
 	#### WORKFLOW PROCESS ID
 	my $workflowpid = $self->workflowpid();
-
-	#### CLUSTER, QUEUE AND QUEUE OPTIONS
-	my $queue = $self->util()->queueName($username, $projectname, $workflowname);
-	#my $queue_options = $self->data()->{queue_options};
 	
 	#### SET OUTPUT DIR
 	my $outputdir =  "$fileroot/$projectname/$workflowname";
@@ -618,8 +615,7 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		my $successor		=	$stage->{successor};
 		$self->logDebug("successor", $successor) if defined $successor and $successor ne "";
 		
-		#### STOP IF NO STAGE PARAMETERS
-		$self->logDebug("stageparameters not defined for stage $counter $stage->{name}") and last if not defined $stage->{stageparameters};
+		$stage->{stageparameters} = [] if not defined $stage->{stageparameters};
 		
 		my $stage_number = $counter + 1;
 

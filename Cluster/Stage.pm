@@ -111,8 +111,8 @@ method run ($dryrun) {
 	my $qstat		= $self->qstat();
 	my $qsub		= $self->qsub();
 	my $workflowpid = $self->workflowpid();
-    $self->logDebug("$$ cluster", $cluster);
-
+  $self->logDebug("$$ queue", $queue);
+  
 	#### SET DEFAULTS
 	$queue = '' if not defined $queue;
 
