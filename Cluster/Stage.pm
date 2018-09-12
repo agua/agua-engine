@@ -52,6 +52,7 @@ has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'qsub'				=>  ( isa => 'Str', is => 'rw' );
 has 'qstat'				=>  ( isa => 'Str', is => 'rw' );
 has 'resultfile'	=>  ( isa => 'Str', is => 'ro', default => sub { "/tmp/result-$$" });
+has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'queued'			=>  ( isa => 'Str', is => 'rw' );
 
 # Hash/Array
@@ -258,6 +259,28 @@ AND appnumber='$appnumber'};
 	#$self->logDebug("successor", $successor);
 	
 	return $successor;	
+}
+
+method setStageQueue ($queue) {
+	$self->logDebug("queue", $queue);
+	
+	#### GET TABLE KEYS
+	my $username 	= $self->username();
+	my $projectname 	= $self->projectname();
+	my $workflowname 	= $self->workflowname();
+	my $appnumber 		= $self->appnumber();
+	my $now 		= $self->table()->db()->now();
+	my $query = qq{UPDATE stage
+SET
+queue = '$queue'
+WHERE username = '$username'
+AND projectname = '$projectname'
+AND workflowname = '$workflowname'
+AND appnumber = '$appnumber'};
+	$self->logDebug("$query");
+	my $success = $self->table()->db()->do($query);
+	$self->logDebug("success", $success);
+	$self->logError("Could not update stage table with queue: $queue") and exit if not $success;
 }
 
 method setQueued {

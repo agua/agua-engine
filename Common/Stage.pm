@@ -71,7 +71,6 @@ has 'workflowname'  	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'projectname'   	=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'appname'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'apptype'   		=>  ( isa => 'Str', is => 'rw', required => 1  );
-# has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'outputdir'		=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'scriptfile'	=>  ( isa => 'Str', is => 'rw', required => 1 );
 has 'installdir'   	=>  ( isa => 'Str', is => 'rw', required => 1  );

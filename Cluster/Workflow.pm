@@ -479,6 +479,9 @@ method runStages ($stages, $dryrun) {
 		#### SET STATUS TO running
 		$stage->setStatus('running');
 
+		#### SET QUEUE NAME FOR STAGE
+		$stage->setStageQueue( $stage->queue() );
+
 		#### NOTIFY STATUS
 		if ( $worker ) {
 			$self->updateJobStatus($stage, "started");
