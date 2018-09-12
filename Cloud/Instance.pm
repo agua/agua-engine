@@ -21,7 +21,7 @@ use File::Path;
 use Getopt::Simple;
 
 #### INTERNAL MODULES
-use Ops::Main;
+#use Ops::Main;
 
 # Booleans
 has 'log'			=>  ( isa => 'Int', is => 'rw', default => 0 );  
@@ -52,7 +52,7 @@ has 'logfile'		=> ( isa => 'Str|Undef', is => 'rw', required	=>	0	);
 #### Object
 has 'blockdevices'	=> ( isa => 'ArrayRef|Undef', is => 'rw', required	=>	0	);
 has 'tags'			=> ( isa => 'HashRef|Undef', is => 'rw', required	=>	0	);
-has 'ops'	=> ( isa => 'Ops::Main', is => 'rw', lazy => 1, builder => "setOps" );
+# has 'ops'	=> ( isa => 'Ops::Main', is => 'rw', lazy => 1, builder => "setOps" );
 has 'conf'	=> ( isa => 'Conf::Yaml', is => 'rw', lazy => 1, builder => "setConf" );
 
 has 'util'		=>	(
@@ -84,24 +84,24 @@ method init($hash) {
 	$self->startLog($self->logfile()) if defined $self->logfile();
 	$self->logDebug("logfile: " . $self->logfile()) if defined $self->logfile();
 
-	#### SET ops log AND printlog
-	$self->ops()->log($self->log());
-	$self->ops()->printlog($self->printlog());
+	# #### SET ops log AND printlog
+	# $self->ops()->log($self->log());
+	# $self->ops()->printlog($self->printlog());
 	
 	$self->load($hash) if defined $hash and $hash != {};
 }
 
 #### SET METHODS
 
-method setOps () {
-	my $ops = Ops::Main->new({
-		conf		=>	$self->conf(),
-		log		=>	$self->log(),
-		printlog	=>	$self->printlog()
-	});
+# method setOps () {
+# 	my $ops = Ops::Main->new({
+# 		conf		=>	$self->conf(),
+# 		log		=>	$self->log(),
+# 		printlog	=>	$self->printlog()
+# 	});
 
-	$self->ops($ops);	
-}
+# 	$self->ops($ops);	
+# }
 
 method setConf {
 	my $conf 	= Conf::Yaml->new({
