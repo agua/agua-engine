@@ -250,10 +250,7 @@ method setSystemCall {
 		if ( ($prescript) =~ s/^file:// ) {
 			$self->logDebug("prescript", $prescript);
 
-			$prescript	=~	s/<USERHOME>/$userhome/g;
-			$prescript	=~	s/<FILEROOT>/$fileroot/g;
-			$prescript	=~	s/<PROJECT>/$projectname/g;
-			$prescript	=~	s/<WORKFLOW>/$workflowname/g;
+			$prescript	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $prescript );
 
 			$prescript	=	$self->getPreScript( $prescript );
 		}
@@ -264,10 +261,7 @@ method setSystemCall {
 	}
 	$self->logDebug("FINAL exports", $exports);
 	
-	$exports	=~	s/<USERHOME>/$userhome/g;
-	$exports	=~	s/<FILEROOT>/$fileroot/g;
-	$exports	=~	s/<PROJECT>/$projectname/g;
-	$exports	=~	s/<WORKFLOW>/$workflowname/g;
+	$exports	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $exports );
 
 	#### SET EXECUTOR 
 	my $executor = $self->executor();
@@ -276,7 +270,8 @@ method setSystemCall {
 	#### PREFIX APPLICATION PATH WITH PACKAGE INSTALLATION DIRECTORY
 	my $application = $self->installdir() . "/" . $self->location();	
 	$self->logDebug("$$ application", $application);
-	
+	$application	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $application );
+
 	#### SET SYSTEM CALL
 	my $systemcall = [];
 	push @$systemcall, $exports;
@@ -286,6 +281,15 @@ method setSystemCall {
 	@$systemcall = (@$systemcall, @$arguments);
 	
 	return $systemcall;	
+}
+
+method replaceTags ( $userhome, $fileroot, $projectname, $workflowname, $string  ) {
+	$string	=~	s/<USERHOME>/$userhome/g;
+	$string	=~	s/<FILEROOT>/$fileroot/g;
+	$string	=~	s/<PROJECT>/$projectname/g;
+	$string	=~	s/<WORKFLOW>/$workflowname/g;
+
+	return $string;
 }
 
 method containsRedirection ($arguments) {
