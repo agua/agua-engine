@@ -26,6 +26,34 @@ has 'masterbinroot'	=> ( is  => 'rw', 'isa' => 'Str|Undef', required	=>	0	);
 has 'json'		=> ( isa => 'HashRef', is => 'rw', required => 0 );
 has 'envars'	=> ( isa => 'HashRef|Undef', is => 'rw', required => 0 );
 
+has 'envar'	=> ( 
+	is => 'rw',
+	isa => 'Envar',
+	lazy => 1,
+	builder => "setEnvar" 
+);
+
+method setEnvar {
+	$self->logCaller("");
+	my $customvars	=	$self->can("customvars") ? $self->customvars() : undef;
+	my $envarsub	=	$self->can("envarsub") ? $self->envarsub() : undef;
+	$self->logDebug("customvars", $customvars);
+	$self->logDebug("envarsub", $envarsub);
+	
+	my $envar = Envar->new({
+		db			=>	$self->table()->db(),
+		conf		=>	$self->conf(),
+		customvars	=>	$customvars,
+		envarsub	=>	$envarsub,
+		parent		=>	$self,
+		log 			=>	$self->log(),
+		printlog	=>	$self->printlog(),
+	});
+	
+	$self->envar($envar);
+}
+
+
 use Data::Dumper;
 use File::Path;
 
@@ -41,21 +69,26 @@ method sgeBinCommand ( $host ) {
 	my $cluster 	=	$self->cluster();
 
 	#### SET COMMAND WITH ENVIRONMENT VARIABLES
- 	my $envars = $self->getEnvars($username, $cluster);
+	my $envar 	=	$self->envar(); 
+	my $envarstring = $envar->toString();
+	$self->logDebug("envarstring", $envarstring);
 	
-	my $sgebin;
-	$sgebin = $self->head()->ops()->getSgeBinRoot() if $host eq "head";
-	$sgebin = $self->master()->ops()->getSgeBinRoot() if $host eq "master";
+	my $sgebin = $self->conf()->getKey("scheduler:SGEBIN");
+	$self->logDebug("sgebin", $sgebin);
+
+	# $sgebin = $self->head()->ops()->getSgeBinRoot() if $host eq "head";
+	# $sgebin = $self->master()->ops()->getSgeBinRoot() if $host eq "master";
 
 	$self->logNote("sgebin", $sgebin);
   
-    my $command;	
-	$command .= "$envars->{tostring}" if defined $envars and defined $envars->{tostring};
+  my $command;	
+	$command .= $envarstring if defined $envar and defined $envarstring;
 	$command .= "$sgebin";
 	
-	$self->headbinroot($command) if $host eq "head";
-	$self->masterbinroot($command) if $host eq "master";
-	
+	# $self->headbinroot($command) if $host eq "head";
+	# $self->masterbinroot($command) if $host eq "master";
+
+	$self->logDebug("RETURNING command", $command);	
 	return $command;
 }
 
@@ -77,8 +110,10 @@ method createQueuefile ( $queue, $queuefile, $parameters ) {
 method getQueueConf ( $queue ) {
 	$queue = '' if not defined $queue;
 	my $sgebin	=	$self->sgeBinCommand("head");
-	my $envars 	=	$self->getEnvars($self->username(), $self->cluster()); 
-	my $qconf = "$envars->{tostring} $sgebin/qconf -sq $queue";
+	my $envar 	=	$self->envar(); 
+	my $envarstring = $envar->toString();
+	$self->logDebug("envarstring", $envarstring);
+	my $qconf = "$envarstring $sgebin/qconf -sq $queue";
 	$self->logDebug("$qconf");
 	my $contents = `$qconf`;
 

@@ -816,8 +816,10 @@ method setMonitor {
 	# });
 	$self->logDebug("monitor", $monitor);
 
-	# $self->monitor($monitor);
+	# 
+	$self->monitor($monitor);
 }
+
 method updateMonitor {
 	my $scheduler	=	$self->scheduler();
 	$self->logCaller("scheduler", $scheduler);

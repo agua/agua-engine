@@ -194,6 +194,8 @@ method run ($dryrun) {
 	$self->logDebug("$$ jobid", $jobid);
 	$self->logDebug("$$ error", $error);
 
+	$jobid = 1;
+	
 	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
 
 	#### SET STAGE PID
