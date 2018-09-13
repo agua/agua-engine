@@ -176,6 +176,7 @@ method run ($dryrun) {
 	my ($jobid, $error)  = $monitor->submitJob($job);
 	$self->logDebug("$$ jobid", $jobid);
 	$self->logDebug("$$ error", $error);
+
 	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
 
 	#### SET STAGE PID
@@ -187,6 +188,11 @@ method run ($dryrun) {
 	#### GET JOB STATUS
 	$self->logDebug("$$ Monitoring job...");
 	my $jobstatus = $monitor->jobStatus($jobid);
+
+##### DEBUG
+##### DEBUG
+	# my $jobstatus = "completed";
+
 	$self->logDebug("$$ jobstatus", $jobstatus);
 
 	#### SET SLEEP
