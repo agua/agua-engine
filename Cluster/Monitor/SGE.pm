@@ -355,27 +355,35 @@ method setQstat {
 
 method qacct ($username, $cluster, $jobid) {
 	#### MAKE qacct CALL TO MASTER
-	$self->logDebug("Engine::Cluster::Monitor::SGE::qacct()");
-	my $masterip = $self->getActQmaster($cluster);
-	$self->logDebug("masterip", $masterip);
+	$self->logDebug("cluster", $cluster);
 
-	my $envars = $self->envars()->{tostring};
-	my $keypairfile = $self->setKeypairFile($username);
-	my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
-	$self->_setSsh("root", $masterip, $keypairfile);
-	my $sgebin = $self->master()->ops()->getSgeBinRoot();
+	my $envars = $self->envar()->toString();
+	# my $sgeroot = $self->conf()->getKey("scheduler:SGEROOT");
+	my $sgebin = $self->conf()->getKey("scheduler:SGEBIN");
 
+	#### STARCLUSTER
+	# my $keypairfile = $self->setKeypairFile($username);
+	# my $masterip = $self->getActQmaster($cluster);
+	# my $masterip = $self->conf()->getKey("scheduler:MASTERIP");
+	# $self->logDebug("masterip", $masterip);
+	# $self->_setSsh("root", $masterip, $keypairfile);
+	# my $sgebin = $self->master()->ops()->getSgeBinRoot();	
+	
 	my $scheduler	=	$self->conf()->getKey("core:SCHEDULER");
 	$self->logDebug("scheduler", $scheduler);
 	my $command 	=	"$envars $sgebin/qacct -j $jobid";
-	my $qacct;
-	if ( $scheduler eq "starcluster" ) {
-		($qacct) = $self->ssh()->execute($command);
-	}
-	else {
-		$qacct 	= 	`$command`;
-		$qacct	=~	s/\s+$//;
-	}
+	my $qacct 	= 	`$command`;
+	$qacct	=~	s/\s+$//;
+
+	#### STARCLUSTER
+	# my $qacct;
+	# if ( $scheduler eq "starcluster" ) {
+	# 	($qacct) = $self->ssh()->execute($command);
+	# }
+	# else {
+		# $qacct 	= 	`$command`;
+		# $qacct	=~	s/\s+$//;
+	# }
 	
 	return $qacct;
 }
@@ -839,7 +847,7 @@ method jobStatus ($job_id) {
 	#my $jobcheck = $self->checkJob($job_id);	
 	#
 	#my $status = $self->checkToStatus($jobcheck);
-    return $status;
+  return $status;
 }
 
 method checkJob ($job_id) {

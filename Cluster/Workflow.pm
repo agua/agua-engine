@@ -549,12 +549,12 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	$self->logDebug("workflowname", $workflowname);
 	$self->logDebug("scheduler", $scheduler);
 	
-	#### GET SLOTS (NUMBER OF CPUS ALLOCATED TO CLUSTER JOB)
-	my $slots	=	undef;
-	if ( defined $scheduler and $scheduler eq "sge" ) {
-		$slots = $self->getSlots($username, $cluster);
-	}
-	$self->logDebug("slots", $slots);
+	# #### GET SLOTS (NUMBER OF CPUS ALLOCATED TO CLUSTER JOB)
+	# my $slots	=	undef;
+	# if ( defined $scheduler and $scheduler eq "sge" ) {
+	# 	$slots = $self->getSlots($username, $cluster);
+	# }
+	# $self->logDebug("slots", $slots);
 	
 	#### SET STAGES
 	my $stages = $self->table()->getStagesByWorkflow($data);
@@ -642,8 +642,8 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		#### MAX JOBS
 		$stage->{maxjobs}		=	$self->maxjobs();
 
-		#### SLOTS
-		$stage->{slots}			=	$slots;
+		# #### SLOTS
+		# $stage->{slots}			=	$slots;
 
 		#### QUEUE
 		$stage->{queue}			=  	$queue;
@@ -687,29 +687,29 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	return $stageobjects;
 }
 
-method getSlots ($username, $cluster) {
-	$self->logCaller("");
+# method getSlots ($username, $cluster) {
+# 	$self->logCaller("");
 
-	return if not defined $username;
-	return if not defined $cluster;
+# 	return if not defined $username;
+# 	return if not defined $cluster;
 	
-	$self->logDebug("username", $username);
-	$self->logDebug("cluster", $cluster);
+# 	$self->logDebug("username", $username);
+# 	$self->logDebug("cluster", $cluster);
 	
-	#### SET INSTANCETYPE
-	my $clusterobject = $self->getCluster($username, $cluster);
-	$self->logDebug("clusterobject", $clusterobject);
-	my $instancetype = $clusterobject->{instancetype};
-	$self->logDebug("instancetype", $instancetype);
-	$self->instancetype($instancetype);
+# 	#### SET INSTANCETYPE
+# 	my $clusterobject = $self->getCluster($username, $cluster);
+# 	$self->logDebug("clusterobject", $clusterobject);
+# 	my $instancetype = $clusterobject->{instancetype};
+# 	$self->logDebug("instancetype", $instancetype);
+# 	$self->instancetype($instancetype);
 
-	$self->logDebug("DOING self->setSlotNumber");
-	my $slots = $self->setSlotNumber($instancetype);
-	$slots = 1 if not defined $slots;
-	$self->logDebug("slots", $slots);
+# 	$self->logDebug("DOING self->setSlotNumber");
+# 	my $slots = $self->setSlotNumber($instancetype);
+# 	$slots = 1 if not defined $slots;
+# 	$self->logDebug("slots", $slots);
 
-	return $slots;	
-}
+# 	return $slots;	
+# }
 
 
 method updateJobStatus ($stage, $status) {

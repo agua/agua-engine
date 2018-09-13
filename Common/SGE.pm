@@ -12,6 +12,9 @@ use Method::Signatures::Simple;
 		
 =cut
 
+use Data::Dumper;
+use File::Path;
+
 # STRINGS
 has 'project'	=> ( isa => 'Str|Undef', is => 'rw', required => 0 );
 has 'workflow'	=> ( isa => 'Str|Undef', is => 'rw', required => 0 );
@@ -52,10 +55,6 @@ method setEnvar {
 	
 	$self->envar($envar);
 }
-
-
-use Data::Dumper;
-use File::Path;
 
 #### SGE BIN
 method sgeBinCommand ( $host ) {

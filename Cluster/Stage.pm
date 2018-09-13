@@ -194,7 +194,9 @@ method run ($dryrun) {
 	$self->logDebug("$$ jobid", $jobid);
 	$self->logDebug("$$ error", $error);
 
-	$jobid = 1;
+##### DEBUG
+##### DEBUG
+	# $jobid = 1;
 	
 	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
 
@@ -207,6 +209,11 @@ method run ($dryrun) {
 	#### GET JOB STATUS
 	$self->logDebug("$$ Monitoring job...");
 	my $jobstatus = $monitor->jobStatus($jobid);
+
+##### DEBUG
+##### DEBUG
+	# my $jobstatus = "completed";
+
 	$self->logDebug("$$ jobstatus", $jobstatus);
 
 	#### SET SLEEP
