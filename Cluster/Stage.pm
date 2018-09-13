@@ -96,73 +96,58 @@ method run ($dryrun) {
 	
 	#### TO DO: START PROGRESS UPDATER
 
-	#### EXECUTE APPLICATION
-	my $exitcode;
-	my $cluster = $self->cluster(); 
-	$self->logDebug("$$ cluster", $cluster);
-	my $monitor		=	$self->monitor();	
-
-	#### MAIN PARAMS
-	my $username 	= $self->username();
-	my $projectname 	= $self->projectname();
-	my $workflownumber 	= $self->workflownumber();
-	my $workflowname 	= $self->workflowname();
-	my $appnumber 		= $self->appnumber();
-	my $queue 		= $self->queue();
-	my $qstat		= $self->qstat();
-	my $qsub		= $self->qsub();
-	my $workflowpid = $self->workflowpid();
-  $self->logDebug("$$ queue", $queue);
-  
-	#### SET DEFAULTS
-	$queue = '' if not defined $queue;
-
-	#### GET AGUA DIRECTORY FOR CREATING STDOUTFILE LATER
-	my $aguadir 	= $self->conf()->getKey("core:AGUADIR");
-
-	#### GET FILE ROOT
-	my $fileroot = $self->util()->getFileroot($username);
-
 	#### GET ARGUMENTS ARRAY
   my $stageparameters =	$self->stageparameters();
-  #$self->logDebug("$$ Arguments", $stageparameters);
   $stageparameters =~ s/\'/"/g;
 	my $arguments = $self->setArguments($stageparameters);    
 
-	#### GET PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
-	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$installdir/lib";
+	# #### GET PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
+	# my $installdir = $self->conf()->getKey("core:INSTALLDIR");
+	# my $perl5lib = "$installdir/lib";
 	
-	#### SET EXECUTOR
-	my $executor	.=	"export PERL5LIB=$perl5lib; ";
-	$executor 		.= 	$self->executor() if $self->executor();
-	$self->logDebug("$$ self->executor(): " . $self->executor());
+	# #### SET EXECUTOR
+	# my $executor	.=	"export PERL5LIB=$perl5lib; ";
+	# $executor 		.= 	$self->executor() if $self->executor();
+	# $self->logDebug("$$ self->executor(): " . $self->executor());
 
-	#### SET APPLICATION
-	my $application = $self->installdir() . "/" . $self->location();	
-	$self->logDebug("$$ application", $application);
+	# #### SET APPLICATION
+	# my $application = $self->installdir() . "/" . $self->location();	
+	# $self->logDebug("$$ application", $application);
 
-	#### ADD THE INSTALLDIR IF THE LOCATION IS NOT AN ABSOLUTE PATH
-	$self->logDebug("$$ installdir", $installdir);
-	if ( $application !~ /^\// and $application !~ /^[A-Z]:/i ) {
-		$application = "$installdir/bin/$application";
-		$self->logDebug("$$ Added installdir to stage_arguments->{location}: " . $application);
-	}
+	# #### ADD THE INSTALLDIR IF THE LOCATION IS NOT AN ABSOLUTE PATH
+	# $self->logDebug("$$ installdir", $installdir);
+	# if ( $application !~ /^\// and $application !~ /^[A-Z]:/i ) {
+	# 	$application = "$installdir/bin/$application";
+	# 	$self->logDebug("$$ Added installdir to stage_arguments->{location}: " . $application);
+	# }
 
-	#### SET SYSTEM CALL
-	my @systemcall = ($application, @$arguments);
-	my $command = "$executor @systemcall";
+	# #### SET SYSTEM CALL
+	# my @systemcall = ($application, @$arguments);
+	# my $command = "$executor @systemcall";
 	
+	#### SET SYSTEM CALL TO POPULATE RUN SCRIPT
+	my $systemcall = $self->setSystemCall();
+	my $command = join " \\\n", @$systemcall;
+	#$self->logDebug("command", $command);
+
+	#### MAIN PARAMS
+	my $exitcode = 0;
+	my $monitor		=	$self->monitor();	
+
   #### GET OUTPUT DIR
   my $outputdir = $self->outputdir();
   $self->logDebug("$$ outputdir", $outputdir);
 
 	#### SET JOB NAME AS project-workflow-appnumber
+	my $projectname 	= $self->projectname();
+	my $workflownumber 	= $self->workflownumber();
+	my $workflowname 	= $self->workflowname();
+	my $appnumber 		= $self->appnumber();
 	my $label =	$projectname;
 	$label .= "-" . $workflownumber;
 	$label .= "-" . $workflowname;
 	$label .= "-" . $appnumber;
-    $self->logDebug("$$ label", $label);
+  $self->logDebug("$$ label", $label);
 
 	#### SET *** BATCH *** JOB 
 	my $job = $self->setJob([$command], $label, $outputdir);
@@ -175,15 +160,13 @@ method run ($dryrun) {
 	my $lockfile = $job->{lockfile};
 	
 	#### PRINT SHELL SCRIPT	
-	$self->printSgeScriptfile($scriptfile, $commands, $label, $stdoutfile, $stderrfile, $lockfile);
+	$self->printScriptfile($scriptfile, $commands, $label, $stdoutfile, $stderrfile, $lockfile);
 	$self->logDebug("$$ scriptfile", $scriptfile);
 
 	#### SET QUEUE
-	$self->logDebug("$$ queue", $queue);
 	$job->{queue} = $self->queue();
 	
 	#### SET QSUB
-	$self->logDebug("$$ qsub", $qsub);
 	$job->{qsub} = $self->qsub();
 
 	#### SET SGE ENVIRONMENT VARIABLES
@@ -193,7 +176,6 @@ method run ($dryrun) {
 	my ($jobid, $error)  = $monitor->submitJob($job);
 	$self->logDebug("$$ jobid", $jobid);
 	$self->logDebug("$$ error", $error);
-
 	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
 
 	#### SET STAGE PID
@@ -260,6 +242,7 @@ AND appnumber='$appnumber'};
 	
 	return $successor;	
 }
+
 
 method setStageQueue ($queue) {
 	$self->logDebug("queue", $queue);

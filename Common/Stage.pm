@@ -211,10 +211,6 @@ method setSystemCall {
   my $stageparameters =	$self->stageparameters();
 	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
 
-	#### GET VARIABLES	
-	my $projectname		=	$$stageparameters[0]->{projectname};
-	my $workflowname	=	$$stageparameters[0]->{workflowname};
-
 	#### GET FILE ROOT
 	my $username = $self->username();
 	my $fileroot = $self->fileroot();
@@ -232,10 +228,17 @@ method setSystemCall {
 -o $usagefile \\
 -f "%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k"};
 
-	#### GET ENVARS
+	#### ADD PERL5LIB TO ENABLE EXTERNAL SCRIPTS TO USE OUR MODULES
+	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
+	my $perl5lib = "$installdir/lib";
+
+	#### SET EXPORTS
 	my $envar 			= 	$self->envar();
+	my $stagenumber		=	$self->appnumber();	
+	my $projectname		=	$$stageparameters[0]->{projectname};
+	my $workflowname	=	$$stageparameters[0]->{workflowname};
 	my $exports 		= 	$envar->toString();
-	my $stagenumber		=	$self->appnumber();
+	$exports .=	"export PERL5LIB=$perl5lib; ";
 	$exports .= "export STAGENUMBER=$stagenumber;";
 	$exports .= " cd $fileroot/$projectname/$workflowname;";
 	$self->logDebug("exports", $exports);
@@ -483,13 +486,10 @@ method setArguments ($stageparameters) {
 
 	#### GET FILEROOT
 	my $username 	= $self->username();
-	my $cluster 	= $self->cluster();
 	my $version 	= $self->version();
 	my $fileroot 	= $self->fileroot();
 	my $userhome 	= $self->userhome();
-	# my $fileroot 	= $self->util()->getFileroot($username);
 	$self->logNote("username", $username);
-	$self->logNote("cluster", $cluster);
 	$self->logNote("fileroot", $fileroot);
 	$self->logNote("version", $version);
 	
@@ -498,8 +498,6 @@ method setArguments ($stageparameters) {
 	#$self->logNote("SORTED stageparameters", $stageparameters);
 	
 	#### GENERATE ARGUMENTS ARRAY
-	#$self->logNote("Generating arguments array...");
-	my $clustertype;
 	my $arguments = [];
 	foreach my $stageparameter ( @$stageparameters ) {
 		my $paramname	=	$stageparameter->{paramname};
@@ -532,8 +530,6 @@ method setArguments ($stageparameters) {
 			}
 		}
 	
-		$clustertype = 1 if $paramname eq "clustertype";
-
 		$self->logNote("paramname", $paramname);
 		$self->logNote("argument", $argument);
 		$self->logNote("value", $value);
@@ -598,18 +594,6 @@ method setArguments ($stageparameters) {
 
 			$self->logNote("AFTER value", $value);
 			$self->logNote("current arguments", $arguments);
-		}
-	}
-
-	if ( defined $clustertype ) {
-		if ( defined $username and $username ) {
-			push @$arguments, "--username";
-			push @$arguments, $username;
-		}
-	
-		if ( defined $cluster and $cluster ) {
-			push @$arguments, "--cluster";
-			push @$arguments, $cluster;
 		}
 	}
 

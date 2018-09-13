@@ -80,6 +80,7 @@ method run ($dryrun) {
 	#### REGISTER PROCESS IDS SO WE CAN MONITOR THEIR PROGRESS
 	$self->registerRunInfo();
 
+	#### SET SYSTEM CALL TO POPULATE RUN SCRIPT
 	my $systemcall = $self->setSystemCall();
 
 	#### REDIRECTION IS 1 IF SYSTEM CALL CONTAINS A ">"
@@ -151,84 +152,6 @@ method run ($dryrun) {
 	$self->logDebug("FIRST exitcode", $exitcode);
 	
 	return $exitcode;
-}
-
-method setSystemCall {
-  my $stageparameters =	$self->stageparameters();
-	$self->logError("stageparemeters not defined") and exit if not defined $stageparameters;
-
-	#### GET VARIABLES	
-	my $projectname		=	$$stageparameters[0]->{projectname};
-	my $workflowname	=	$$stageparameters[0]->{workflowname};
-
-	#### GET FILE ROOT
-	my $username = $self->username();
-	my $fileroot = $self->fileroot();
-	my $userhome = $self->userhome();
-	$self->logDebug("$$ fileroot", $fileroot);
-
-	#### CONVERT ARGUMENTS INTO AN ARRAY IF ITS A NON-EMPTY STRING
-	my $arguments = $self->setArguments($stageparameters);
-	$self->logDebug("arguments", $arguments);
-
-	#### ADD USAGE COMMAND
-	my $usagefile	=	$self->stdoutfile();
-	$usagefile		=~	s/stdout$/usage/;
-	my $usage		=	qq{/usr/bin/time \\
--o $usagefile \\
--f "%Uuser %Ssystem %Eelapsed %PCPU (%Xtext+%Ddata %Mmax)k"};
-
-	#### GET ENVARS
-	my $envar 			= 	$self->envar();
-	my $exports 		= 	$envar->toString();
-	my $stagenumber		=	$self->appnumber();
-	$exports .= "export STAGENUMBER=$stagenumber;";
-	$exports .= " cd $fileroot/$projectname/$workflowname;";
-	$self->logDebug("exports", $exports);
-
-	#### GET PRESCRIPT
-	my $prescript		=	$self->prescript();
-	$self->logDebug("prescript", $prescript);
-	if ( defined $prescript and $prescript ne "" ) {
-		if ( ($prescript) =~ s/^file:// ) {
-			$self->logDebug("prescript", $prescript);
-
-			$prescript	=~	s/<USERHOME>/$userhome/g;
-			$prescript	=~	s/<FILEROOT>/$fileroot/g;
-			$prescript	=~	s/<PROJECT>/$projectname/g;
-			$prescript	=~	s/<WORKFLOW>/$workflowname/g;
-
-			$prescript	=	$self->getPreScript( $prescript );
-		}
-		$self->logDebug("prescript", $prescript);
-		$prescript =~ s/[;\s]*$//g;
-		$prescript .= ";";
-		$exports .= $prescript;
-	}
-	$self->logDebug("FINAL exports", $exports);
-	
-	$exports	=~	s/<USERHOME>/$userhome/g;
-	$exports	=~	s/<FILEROOT>/$fileroot/g;
-	$exports	=~	s/<PROJECT>/$projectname/g;
-	$exports	=~	s/<WORKFLOW>/$workflowname/g;
-
-	#### SET EXECUTOR 
-	my $executor = $self->executor();
-	$self->logDebug("executor", $executor);
-	
-	#### PREFIX APPLICATION PATH WITH PACKAGE INSTALLATION DIRECTORY
-	my $application = $self->installdir() . "/" . $self->location();	
-	$self->logDebug("$$ application", $application);
-	
-	#### SET SYSTEM CALL
-	my $systemcall = [];
-	push @$systemcall, $exports;
-	push @$systemcall, $usage;
-	push @$systemcall, $executor if defined $executor and $executor ne "";
-	push @$systemcall, $application;
-	@$systemcall = (@$systemcall, @$arguments);
-	
-	return $systemcall;	
 }
 
 method containsRedirection ($arguments) {
@@ -350,154 +273,6 @@ method setStageJob {
 	return $self->setJob([$command], $label, $outputdir);
 }
 
-method runOnCluster {
-=head2
-
-	SUBROUTINE		runOnCluster
-	
-	PURPOSE
-	
-		SUBMIT THE SHELLSCRIPT FOR EXECUTION ON A CLUSTER
-
-=cut
-	$self->logDebug("$$ Stage::runOnCluster()");	;
-
-	#### CLUSTER MONITOR
-	my $monitor		=	$self->monitor();	
-	#### GET MAIN PARAMS
-	my $username 	= $self->username();
-	my $projectname 	= $self->projectname();
-	my $workflownumber 	= $self->workflownumber();
-	my $workflowname 	= $self->workflowname();
-	my $appnumber 		= $self->appnumber();
-	my $queue 		= $self->queue();
-	my $cluster		= $self->cluster();
-	my $qstat		= $self->qstat();
-	my $qsub		= $self->qsub();
-	my $workflowpid = $self->workflowpid();
-    $self->logDebug("$$ cluster", $cluster);
-
-	#### SET DEFAULTS
-	$queue = '' if not defined $queue;
-
-	#### GET AGUA DIRECTORY FOR CREATING STDOUTFILE LATER
-	my $aguadir 	= $self->conf()->getKey("core:AGUADIR");
-
-	#### GET FILE ROOT
-	my $fileroot = $self->util()->getFileroot($username);
-
-	#### GET ARGUMENTS ARRAY
-  my $stageparameters =	$self->stageparameters();
-  #$self->logDebug("$$ Arguments", $stageparameters);
-  $stageparameters =~ s/\'/"/g;
-	my $arguments = $self->setArguments($stageparameters);    
-
-	#### GET PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
-	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$installdir/lib";
-	
-	#### SET EXECUTOR
-	my $executor	.=	"export PERL5LIB=$perl5lib; ";
-	$executor 		.= 	$self->executor() if $self->executor();
-	$self->logDebug("$$ self->executor(): " . $self->executor());
-
-	#### SET APPLICATION
-	my $application = $self->installdir() . "/" . $self->location();	
-	$self->logDebug("$$ application", $application);
-
-	#### ADD THE INSTALLDIR IF THE LOCATION IS NOT AN ABSOLUTE PATH
-	$self->logDebug("$$ installdir", $installdir);
-	if ( $application !~ /^\// and $application !~ /^[A-Z]:/i ) {
-		$application = "$installdir/bin/$application";
-		$self->logDebug("$$ Added installdir to stage_arguments->{location}: " . $application);
-	}
-
-	#### SET SYSTEM CALL
-	my @systemcall = ($application, @$arguments);
-	my $command = "$executor @systemcall";
-	
-  #### GET OUTPUT DIR
-  my $outputdir = $self->outputdir();
-  $self->logDebug("$$ outputdir", $outputdir);
-
-	#### SET JOB NAME AS project-workflow-appnumber
-	my $label =	$projectname;
-	$label .= "-" . $workflownumber;
-	$label .= "-" . $workflowname;
-	$label .= "-" . $appnumber;
-    $self->logDebug("$$ label", $label);
-
-	#### SET *** BATCH *** JOB 
-	my $job = $self->setJob([$command], $label, $outputdir);
-	
-	#### GET FILES
-	my $commands = $job->{commands};
-	my $scriptfile = $job->{scriptfile};
-	my $stdoutfile = $job->{stdoutfile};
-	my $stderrfile = $job->{stderrfile};
-	my $lockfile = $job->{lockfile};
-	
-	#### PRINT SHELL SCRIPT	
-	$self->printSgeScriptfile($scriptfile, $commands, $label, $stdoutfile, $stderrfile, $lockfile);
-	$self->logDebug("$$ scriptfile", $scriptfile);
-
-	#### SET QUEUE
-	$self->logDebug("$$ queue", $queue);
-	$job->{queue} = $self->queue();
-	
-	#### SET QSUB
-	$self->logDebug("$$ qsub", $qsub);
-	$job->{qsub} = $self->qsub();
-
-	#### SET SGE ENVIRONMENT VARIABLES
-	$job->{envars} = $self->envars() if $self->envars();
-
-	#### SUBMIT TO CLUSTER AND GET THE JOB ID 
-	my ($jobid, $error)  = $monitor->submitJob($job);
-	$self->logDebug("$$ jobid", $jobid);
-	$self->logDebug("$$ error", $error);
-
-	return (undef, $error) if not defined $jobid or $jobid =~ /^\s*$/;
-
-	#### SET STAGE PID
-	$self->setStagePid($jobid);
-	
-	#### SET QUEUED
-	$self->setQueued();
-
-	#### GET JOB STATUS
-	$self->logDebug("$$ Monitoring job...");
-	my $jobstatus = $monitor->jobStatus($jobid);
-	$self->logDebug("$$ jobstatus", $jobstatus);
-
-	#### SET SLEEP
-	my $sleep = $self->conf()->getKey("scheduler:SLEEP");
-	$sleep = 5 if not defined $sleep;
-	$self->logDebug("$$ sleep", $sleep);
-	
-	my $set_running = 0;
-	while ( $jobstatus ne "completed" and $jobstatus ne "error" ) {
-		sleep($sleep);
-		$jobstatus = $monitor->jobStatus($jobid);
-		$self->setRunning() if $jobstatus eq "running" and not $set_running;
-		$set_running = 1 if $jobstatus eq "running";
-
-		$self->setStatus('completed') if $jobstatus eq "completed";
-		$self->setStatus('error') if $jobstatus eq "error";
-	}
-	$self->logDebug("$$ jobstatus", $jobstatus);
-
-	#### PAUSE SEEMS LONG ENOUGH FOR qacct INFO TO BE READY
-	my $PAUSE = 2;
-	$self->logDebug("$$ Sleeping $PAUSE before self->setRunTimes(jobid)");
-	sleep($PAUSE);
-	$self->setRunTimes($jobid);
-
-	$self->logDebug("$$ Completed");
-
-	return 0;
-}	#	runOnCluster
-
 method updateStatus ($set, $username, $projectname, $workflowname) {
 	
 	my $query = qq{UPDATE stage
@@ -564,152 +339,6 @@ method mkdirCommand ($file) {
 	#$self->logDebug("command", $command);
 	
 	`$command`;
-}
-
-method setArguments ($stageparameters) {
-#### SET ARGUMENTS AND GET VALUES FOR ALL PARAMETERS
-	$self->logNote("stageparameters", $stageparameters);
-	$self->logNote("no. stageparameters: " . scalar(@$stageparameters));
-
-	#### SANITY CHECK
-	return if not defined $stageparameters;
-	return if ref($stageparameters) eq '';
-
-	#### GET FILEROOT
-	my $username 	= $self->username();
-	my $cluster 	= $self->cluster();
-	my $version 	= $self->version();
-	my $fileroot 	= $self->fileroot();
-	my $userhome 	= $self->userhome();
-	# my $fileroot 	= $self->util()->getFileroot($username);
-	$self->logNote("username", $username);
-	$self->logNote("cluster", $cluster);
-	$self->logNote("fileroot", $fileroot);
-	$self->logNote("version", $version);
-	
-	#### SORT BY ORDINALS
-	@$stageparameters = sort { $a->{ordinal} <=> $b->{ordinal} } @$stageparameters;
-	#$self->logNote("SORTED stageparameters", $stageparameters);
-	
-	#### GENERATE ARGUMENTS ARRAY
-	#$self->logNote("Generating arguments array...");
-	my $clustertype;
-	my $arguments = [];
-	foreach my $stageparameter ( @$stageparameters ) {
-		my $paramname	=	$stageparameter->{paramname};
-		my $argument 	=	$stageparameter->{argument};
-		my $value 		=	$stageparameter->{value};
-		my $valuetype 	=	$stageparameter->{valuetype};
-		my $discretion 	=	$stageparameter->{discretion};
-		my $projectname		=	$stageparameter->{projectname};
-		my $workflowname	=	$stageparameter->{workflowname};		
-		my $samplehash	=	$self->samplehash();
-		$self->logDebug("samplehash", $samplehash);
-
-		$value	=~	s/<USERHOME>/$userhome/g;
-		$value	=~	s/<FILEROOT>/$fileroot/g;
-		$value	=~	s/<PROJECT>/$projectname/g;
-		$value	=~	s/<WORKFLOW>/$workflowname/g;
-		$value	=~	s/<VERSION>/$version/g if defined $version;
-		$value	=~	s/<USERNAME>/$username/g if defined $username;
-
-		if ( defined $samplehash ) {
-			foreach my $key ( keys %$samplehash ) {
-				my $match	=	uc($key);
-				my $mate	=	$samplehash->{$key};
-				#$self->logNote("key", $key);
-				#$self->logNote("match", $match);
-				#$self->logNote("mate", $mate);
-				#$self->logNote("DOING MATCH $match / $mate");
-				$value	=~	s/<$match>/$mate/g;
-				#$self->logNote("AFTER MATCH value: $value");
-			}
-		}
-	
-		$clustertype = 1 if $paramname eq "clustertype";
-
-		$self->logNote("paramname", $paramname);
-		$self->logNote("argument", $argument);
-		$self->logNote("value", $value);
-		$self->logNote("valuetype", $valuetype);
-		$self->logNote("discretion", $discretion);
-
-		#### SKIP EMPTY FLAG OR ADD 'checked' FLAG
-		if ( $valuetype eq "flag" ) {
-			if (not defined $argument or not $argument) {
-				$self->logNote("Skipping empty flag", $argument);
-				next;
-			}
-
-			push @$arguments, $argument;
-			next;
-		}
-		
-		if ( $value =~ /^\s*$/ and $discretion ne "required" ) {
-			$self->logNote("Skipping empty argument", $argument);
-			next;
-		}
-		
-		if ( defined $value )	{
-			$self->logNote("BEFORE value", $value);
-
-			#### ADD THE FILE ROOT FOR THIS USER TO FILE/DIRECTORY PATHS
-			#### IF IT DOES NOT BEGIN WITH A '/', I.E., AN ABSOLUTE PATH
-			if ( $valuetype =~ /^(file|directory)$/ and $value =~ /^[^\/]/ ) {	
-				$self->logNote("Adding fileroot to $valuetype", $value);
-				$value =~ s/^\///;
-				$value = "$fileroot/$value";
-			}
-
-			#### ADD THE FILE ROOT FOR THIS USER TO FILE/DIRECTORY PATHS
-			#### IF IT DOES NOT BEGIN WITH A '/', I.E., AN ABSOLUTE PATH
-			if ( $valuetype =~ /^(files|directories)$/ and $value =~ /^[^\/]/ ) {	
-				$self->logNote("Adding fileroot to $valuetype", $value);
-				my @subvalues = split ",", $value;
-				foreach my $subvalue ( @subvalues ) {
-					$subvalue =~ s/^\///;
-					$subvalue = "$fileroot/$subvalue";
-				}
-				
-				$value = join ",", @subvalues;
-			}
-
-			#### 'X=' OPTIONS
-			if ( $argument =~ /=$/ ) {
-				push @$arguments, qq{$argument$value};
-			}
-
-			#### '-' OPTIONS (E.G., -i)
-			elsif ( $argument =~ /^\-[^\-]/ ) {
-				push @$arguments, qq{$argument $value};
-			}
-			
-			#### DOUBLE '-' OPTIONS (E.G., --inputfile)
-			else {
-				push @$arguments, $argument if defined $argument and $argument ne "";
-				push @$arguments, $value;
-			}
-
-			$self->logNote("AFTER value", $value);
-			$self->logNote("current arguments", $arguments);
-		}
-	}
-
-	if ( defined $clustertype ) {
-		if ( defined $username and $username ) {
-			push @$arguments, "--username";
-			push @$arguments, $username;
-		}
-	
-		if ( defined $cluster and $cluster ) {
-			push @$arguments, "--cluster";
-			push @$arguments, $cluster;
-		}
-	}
-
-	$self->logNote("arguments", $arguments);
-
-	return $arguments;
 }
 
 method registerRunInfo {
@@ -978,11 +607,11 @@ AND appnumber = '$appnumber'};
 	$self->logError("Could not update stage table with stagepid: $stagepid") and exit if not $success;
 }
 
-method toString () {
+method toString {
 	print $self->_toString();
 }
 
-method _toString () {
+method _toString {
 	my @keys = qw[ username projectname workflownumber workflowname appname appnumber start executor location fileroot queue queue_options outputdir scriptfile stdoutfile stderrfile workflowpid stagepid stagejobid submit setuid installdir cluster qsub qstat resultfile];
 	my $string = '';
 	foreach my $key ( @keys )
@@ -997,67 +626,7 @@ method _toString () {
 
 
 #### ENVAR
-method setEnvarsub {
-	return *_envarSub;
-}
 	
-method _envarSub ($envars, $values, $parent) {
-	$self->logDebug("parent: $parent");
-	$self->logDebug("envars", $envars);
-	$self->logDebug("values", $values);
-	#$self->logDebug("SELF->CONF", $self->conf());
-	
-	#### SET USERNAME AND CLUSTER IF NOT DEFINED
-	if ( not defined $values->{sgeroot} ) {
-		$values->{sgeroot} = $self->conf()->getKey("scheduler:SGEROOT");
-	}
-	
-	#### SET CLUSTER
-	if ( not defined $values->{cluster} and defined $values->{sgecell}) {
-		$values->{cluster} = $values->{sgecell};
-	}
-	
-	#### SET QMASTERPORT
-	if ( not defined $values->{qmasterport}
-		or (
-			defined $values->{username}
-			and $values->{username}
-			and defined $values->{cluster}
-			and $values->{cluster}
-			and defined $self->table()->db()
-			and defined $self->table()->db()->dbh()			
-		)
-	) {
-		$values->{qmasterport} = $parent->getQueueMasterPort($values->{username}, $values->{cluster});
-		$values->{execdport} 	= 	$values->{qmasterport} + 1 if defined $values->{qmasterport};
-		$self->logDebug("values", $values);
-	}
-	
-	$values->{queue} = $parent->setQueueName($values);
-	$self->logDebug("values", $values);
-	
-	return $self->values($values);	
-}
-
-method getQueueMasterPort ($username, $cluster) {
-	my $query = qq{SELECT qmasterport
-FROM clustervars
-WHERE username = '$username'
-AND cluster = '$cluster'};
-	$self->logDebug("query", $query);
-		
-	return $self->table()->db()->query($query);
-}
-
-method setQueueName ($values) {
-	$self->logDebug("values", $values);
-	return if not defined $values->{username};
-	return if not defined $values->{projectname};
-	return if not defined $values->{workflowname};
-	
-	return $values->{username} . "." . $values->{projectname} . "." . $values->{workflowname};
-}
-
 
 } #### Engine::Stage
 

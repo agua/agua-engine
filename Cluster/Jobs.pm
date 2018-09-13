@@ -716,11 +716,11 @@ method printScriptfile {
 
 	$self->logNote("");
 
-	my $clustertype =  $self->conf()->getKey("core:CLUSTERTYPE");
-	$self->logNote("clustertype", $clustertype);
-	return $self->printPbsScriptfile(@_) if $clustertype eq "PBS";
-	return $self->printLsfScriptfile(@_) if $clustertype eq "LSF";
-	return $self->printSgeScriptfile(@_) if $clustertype eq "SGE";
+	my $scheduler =  $self->conf()->getKey("core:SCHEDULER");
+	$self->logNote("scheduler", $scheduler);
+	return $self->printPbsScriptfile(@_) if $scheduler eq "pbs";
+	return $self->printLsfScriptfile(@_) if $scheduler eq "lsf";
+	return $self->printSgeScriptfile(@_) if $scheduler eq "sge";
 }
 
 method printSgeScriptfile ( $scriptfile, $commands, $label, $stdoutfile, $stderrfile, $lockfile) {
@@ -758,38 +758,36 @@ method printSgeScriptfile ( $scriptfile, $commands, $label, $stdoutfile, $stderr
 	$self->logNote("stderrfile", $stderrfile);
 	$self->logNote("cpus", $cpus);
 
-	open(SHFILE, ">$scriptfile") or die "Can't open script file: $scriptfile\n";
-	print SHFILE qq{#!/bin/bash\n\n};
+	my $contents = qq{#!/bin/bash\n\n};
 	
 	#### ! IMPORTANT !
 	#### NEEDED BECAUSE EXEC NODES NOT FINDING $SGE_TASK_ID
 	#### ADD LABEL
-	print SHFILE qq{#\$ -N $label\n};
+	$contents .= qq{#\$ -N $label\n};
 	
 	#### ADD CPUs
-	print SHFILE qq{#\$ -pe threaded $cpus\n} if defined $cpus and $cpus > 1;
+	$contents .= qq{#\$ -pe threaded $cpus\n} if defined $cpus and $cpus > 1;
 
 	#### STDOUT AND STDERR
-	print SHFILE qq{#\$ -j y\n} if not defined $stderrfile;
-	print SHFILE qq{#\$ -o $stdoutfile\n} if defined $stdoutfile;
-	print SHFILE qq{#\$ -e $stderrfile\n} if defined $stderrfile;
+	$contents .= qq{#\$ -j y\n} if not defined $stderrfile;
+	$contents .= qq{#\$ -o $stdoutfile\n} if defined $stdoutfile;
+	$contents .= qq{#\$ -e $stderrfile\n} if defined $stderrfile;
 	
 	#### ADD QUEUE
-	print SHFILE qq{#\$ -q $queue\n};
+	$contents .= qq{#\$ -q $queue\n};
 
 	#### ADD SLOTS
-	#print SHFILE qq{#\$ -pe threaded $slots\n};
+	#$contents .= qq{#\$ -pe threaded $slots\n};
 	
 	##### ADD RESERVATIOIN
-	#print SHFILE qq{#\$ -R y\n};
+	#$contents .= qq{#\$ -R y\n};
 
 	#### ADD RESERVATIOIN
-	print SHFILE qq{#\$ -l h=annaisystems0*\n};
-
+	# $contents .= qq{#\$ -l h=annaisystems0*\n};
 
 	#### ADD WALLTIME IF DEFINED
 	my $walltime = $self->walltime();
-	print SHFILE qq{#\$ -l h_rt=$walltime:00:00\n} if defined $walltime and $walltime;
+	$contents .= qq{#\$ -l h_rt=$walltime:00:00\n} if defined $walltime and $walltime;
 
 #### ADDITIONAL ENVARS
 #echo COMMD_PORT: 	\$COMMD_PORT
@@ -799,7 +797,7 @@ method printSgeScriptfile ( $scriptfile, $commands, $label, $stdoutfile, $stderr
 #echo SGE_CKPT_ENV: 	\$SGE_CKPT_ENV
 #echo SGE_CKPT_DIR: 	\$SGE_CKPT_DIR
 
-	print SHFILE qq{
+	$contents .= qq{
 echo "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
 echo SGE_JOB_SPOOL_DIR: \$SGE_JOB_SPOOL_DIR
 echo SGE_O_HOME: 		    \$SGE_O_HOME
@@ -830,22 +828,26 @@ echo QUEUE:    	       	\$QUEUE
 };
 
 	#### ADD HOSTNAME
-	print SHFILE qq{hostname -f\n};
+	$contents .= qq{hostname -f\n};
 
 	#### PRINT LOCK FILE
-	print SHFILE qq{date > $lockfile\n};
+	$contents .= qq{date > $lockfile\n};
 
 	#### CREATE stdout DIR
 	my ($stdoutdir)	=	$stdoutfile	=~	/^(.+?)\/[^\/]+$/;
-	print SHFILE qq{mkdir -p $stdoutdir\n};
+	$contents .= qq{mkdir -p $stdoutdir\n};
 	
 	my $command = join "\n", @$commands;
-	print SHFILE "$command\n";
+	$contents .= "$command\n";
 
 	#### REMOVE LOCK FILE
-	print SHFILE qq{unlink $lockfile;\n\nexit\n};
+	$contents .= qq{unlink $lockfile;\n\nexit\n};
 
-	close(SHFILE);
+	$self->logDebug("contents", $contents);	
+	
+	open(OUT, ">$scriptfile") or die "Can't open script file: $scriptfile\n";
+	print OUT $contents;
+	close(OUT);
 	chmod(0777, $scriptfile);
 	#or die "Can't chmod 0777 script file: $scriptfile\n";
 	$self->logNote("scriptfile printed", $scriptfile);

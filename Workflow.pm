@@ -70,14 +70,19 @@ sub new {
     my $scheduler = $args->{conf}->getKey("core:SCHEDULER");
     my $runtype = "Local";
     my $submit = $args->{submit};
+    # print "submit: $submit\n" if defined $submit;
+    # print "submit: undef\n" if not defined $submit;
+    # print "scheduler: $scheduler\n";
 
-    if ( defined $scheduler and $scheduler ne "" ) {
+    if ( defined $scheduler 
+      and $scheduler ne ""
+      and $scheduler ne "local"  ) {
       if ( not defined $submit or $submit ne "0" ) {
         $runtype = "Cluster";
       }
     }
     print "**** *** *** **** Engine::Workflow    runtype: $runtype\n";
-    
+ 
     my $location    = "$path/$runtype/Workflow.pm";
     $class          = "Engine::" . $runtype . "::Workflow";
     require $location;

@@ -502,7 +502,6 @@ method runStages ($stages, $dryrun) {
 		
 		my $mysqltime	=	$self->getMysqlTime();
 		$self->logDebug("mysqltime", $mysqltime);
-		$stage->queued($mysqltime);
 		$stage->started($mysqltime);
 		
 		#### CLEAR STDOUT/STDERR FILES

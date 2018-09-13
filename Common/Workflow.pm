@@ -962,6 +962,50 @@ method printStage ( $data ) {
 	}
 }
 
+method updateWorkflowStatus ($username, $cluster, $projectname, $workflowname, $status) {
+	$self->logDebug("status", $status);
+
+#   #### DEBUG 
+#   # my $query = "SELECT * FROM workflow";
+
+#   my $query = qq{UPDATE workflow SET status = 'running'
+#  WHERE username = 'testuser'
+# AND projectname = 'Project1'
+# AND name = 'Workflow1'};
+#   $self->logDebug("query", $query);
+#   # my $results = $self->table()->db()->queryarray($query);
+#   # my $results = $self->table()->db()->queryarray($query);
+#   my $results = $self->table()->db()->queryarray($query);
+#   $self->logDebug("results", $results);
+
+	my $table ="workflow";
+	my $hash = {
+		username			=>	$username,
+		cluster				=>	$cluster,
+		projectname		=>	$projectname,
+		workflowname	=>	$workflowname,
+		status				=>	$status,
+	};
+	$self->logDebug("hash", $hash);
+	my $required_fields = ["username", "projectname", "workflowname"];
+	my $set_hash = {
+		status		=>	$status
+	};
+	my $set_fields = ["status"];
+	$self->logDebug("BEFORE _updateTable   hash", $hash);
+	$self->logDebug("self->db", $self->table()->db());
+
+	# my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
+	my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
+	$self->logDebug("success", $success);
+	
+	return $success;
+}
+
+
+#### STAGES
+
+
 method getWorkflowStatus ($username, $projectname, $workflowname) {
 	$self->logDebug("workflowname", $workflowname);
 

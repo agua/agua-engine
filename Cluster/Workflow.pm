@@ -292,50 +292,6 @@ method runWorkflow ($stages, $username, $projectname, $workflowname, $workflownu
 }
 
 #### UPDATE
-method updateWorkflowStatus ($username, $cluster, $projectname, $workflowname, $status) {
-	$self->logDebug("status", $status);
-
-#   #### DEBUG 
-#   # my $query = "SELECT * FROM workflow";
-
-#   my $query = qq{UPDATE workflow SET status = 'running'
-#  WHERE username = 'testuser'
-# AND projectname = 'Project1'
-# AND name = 'Workflow1'};
-#   $self->logDebug("query", $query);
-#   # my $results = $self->table()->db()->queryarray($query);
-#   # my $results = $self->table()->db()->queryarray($query);
-#   my $results = $self->table()->db()->queryarray($query);
-#   $self->logDebug("results", $results);
-
-	my $table ="workflow";
-	my $hash = {
-		username			=>	$username,
-		cluster				=>	$cluster,
-		projectname		=>	$projectname,
-		workflowname	=>	$workflowname,
-		status				=>	$status,
-	};
-	$self->logDebug("hash", $hash);
-	my $required_fields = ["username", "projectname", "workflowname"];
-	my $set_hash = {
-		status		=>	$status
-	};
-	my $set_fields = ["status"];
-	$self->logDebug("BEFORE _updateTable   hash", $hash);
-	$self->logDebug("self->db", $self->table()->db());
-
-	# my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
-	my $success = $self->table()->db()->_updateTable($table, $hash, $required_fields, $set_hash, $set_fields);
-	$self->logDebug("success", $success);
-	
-	return $success;
-}
-
-
-#### STAGES
-
-
 method runInParallel ($workflowhash, $sampledata) {
 =head2
 
@@ -549,12 +505,12 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	$self->logDebug("workflowname", $workflowname);
 	$self->logDebug("scheduler", $scheduler);
 	
-	#### GET SLOTS (NUMBER OF CPUS ALLOCATED TO CLUSTER JOB)
-	my $slots	=	undef;
-	if ( defined $scheduler and $scheduler eq "sge" ) {
-		$slots = $self->getSlots($username, $cluster);
-	}
-	$self->logDebug("slots", $slots);
+	# #### GET SLOTS (NUMBER OF CPUS ALLOCATED TO CLUSTER JOB)
+	# my $slots	=	undef;
+	# if ( defined $scheduler and $scheduler eq "sge" ) {
+	# 	$slots = $self->getSlots($username, $cluster);
+	# }
+	# $self->logDebug("slots", $slots);
 	
 	#### SET STAGES
 	my $stages = $self->table()->getStagesByWorkflow($data);
@@ -642,8 +598,8 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		#### MAX JOBS
 		$stage->{maxjobs}		=	$self->maxjobs();
 
-		#### SLOTS
-		$stage->{slots}			=	$slots;
+		# #### SLOTS
+		# $stage->{slots}			=	$slots;
 
 		#### QUEUE
 		$stage->{queue}			=  	$queue;
@@ -687,29 +643,29 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 	return $stageobjects;
 }
 
-method getSlots ($username, $cluster) {
-	$self->logCaller("");
+# method getSlots ($username, $cluster) {
+# 	$self->logCaller("");
 
-	return if not defined $username;
-	return if not defined $cluster;
+# 	return if not defined $username;
+# 	return if not defined $cluster;
 	
-	$self->logDebug("username", $username);
-	$self->logDebug("cluster", $cluster);
+# 	$self->logDebug("username", $username);
+# 	$self->logDebug("cluster", $cluster);
 	
-	#### SET INSTANCETYPE
-	my $clusterobject = $self->getCluster($username, $cluster);
-	$self->logDebug("clusterobject", $clusterobject);
-	my $instancetype = $clusterobject->{instancetype};
-	$self->logDebug("instancetype", $instancetype);
-	$self->instancetype($instancetype);
+# 	#### SET INSTANCETYPE
+# 	my $clusterobject = $self->getCluster($username, $cluster);
+# 	$self->logDebug("clusterobject", $clusterobject);
+# 	my $instancetype = $clusterobject->{instancetype};
+# 	$self->logDebug("instancetype", $instancetype);
+# 	$self->instancetype($instancetype);
 
-	$self->logDebug("DOING self->setSlotNumber");
-	my $slots = $self->setSlotNumber($instancetype);
-	$slots = 1 if not defined $slots;
-	$self->logDebug("slots", $slots);
+# 	$self->logDebug("DOING self->setSlotNumber");
+# 	my $slots = $self->setSlotNumber($instancetype);
+# 	$slots = 1 if not defined $slots;
+# 	$self->logDebug("slots", $slots);
 
-	return $slots;	
-}
+# 	return $slots;	
+# }
 
 
 method updateJobStatus ($stage, $status) {
@@ -816,8 +772,10 @@ method setMonitor {
 	# });
 	$self->logDebug("monitor", $monitor);
 
-	# $self->monitor($monitor);
+	# 
+	$self->monitor($monitor);
 }
+
 method updateMonitor {
 	my $scheduler	=	$self->scheduler();
 	$self->logCaller("scheduler", $scheduler);
