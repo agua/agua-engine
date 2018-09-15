@@ -436,7 +436,7 @@ method runStages ($stages, $dryrun) {
 		$stage->setStatus('running');
 
 		#### STORE QSUB OPTIONS IN stage TABLE
-		$stage->setStageQsuboptions( $stage->qsuboptions() );
+		$stage->setStageQsubOptions( $stage->qsuboptions() );
 
 		#### NOTIFY STATUS
 		if ( $worker ) {
