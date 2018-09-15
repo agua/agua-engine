@@ -52,7 +52,7 @@ has 'clustertype'	=>  ( isa => 'Str|Undef', is => 'rw', default => "SGE" );
 has 'qsub'				=>  ( isa => 'Str', is => 'rw' );
 has 'qstat'				=>  ( isa => 'Str', is => 'rw' );
 has 'resultfile'	=>  ( isa => 'Str', is => 'ro', default => sub { "/tmp/result-$$" });
-has 'queue'			=>  ( isa => 'Str', is => 'rw', required => 1  );
+has 'qsuboptions'			=>  ( isa => 'Str', is => 'rw', required => 1  );
 has 'queued'			=>  ( isa => 'Str', is => 'rw' );
 
 # Hash/Array
@@ -164,7 +164,7 @@ method run ($dryrun) {
 	$self->logDebug("$$ scriptfile", $scriptfile);
 
 	#### SET QUEUE
-	$job->{queue} = $self->queue();
+	$job->{qsuboptions} = $self->qsuboptions();
 	
 	#### SET QSUB
 	$job->{qsub} = $self->qsub();
@@ -244,8 +244,8 @@ AND appnumber='$appnumber'};
 }
 
 
-method setStageQueue ($queue) {
-	$self->logDebug("queue", $queue);
+method setStageQsuboptions ($qsuboptions) {
+	$self->logDebug("qsuboptions", $qsuboptions);
 	
 	#### GET TABLE KEYS
 	my $username 	= $self->username();
@@ -255,7 +255,7 @@ method setStageQueue ($queue) {
 	my $now 		= $self->table()->db()->now();
 	my $query = qq{UPDATE stage
 SET
-queue = '$queue'
+qsuboptions = '$qsuboptions'
 WHERE username = '$username'
 AND projectname = '$projectname'
 AND workflowname = '$workflowname'
@@ -263,7 +263,7 @@ AND appnumber = '$appnumber'};
 	$self->logDebug("$query");
 	my $success = $self->table()->db()->do($query);
 	$self->logDebug("success", $success);
-	$self->logError("Could not update stage table with queue: $queue") and exit if not $success;
+	$self->logError("Could not update stage table with qsuboptions: $qsuboptions") and exit if not $success;
 }
 
 method setQueued {

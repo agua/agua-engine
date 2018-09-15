@@ -13,33 +13,33 @@ use Method::Signatures::Simple;
 =cut
 
 # Int
-# has 'submit'	=> ( isa => 'Int|Undef', is => 'rw', default => 0 );
-has 'starttime' => ( isa => 'Int|Undef', is => 'rw', default => sub { time() });
+# has 'submit'		=> ( isa => 'Int|Undef', is => 'rw', default => 0 );
+has 'starttime' 	=> ( isa => 'Int|Undef', is => 'rw', default => sub { time() });
 
 # String
 #has 'clustertype'=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'cluster'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'queue'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'walltime'	=> ( isa => 'Str|Undef', is => 'rw', default => 24 );
-has 'cpus'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'qstat'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'cluster'			=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'qsuboptions'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'walltime'		=> ( isa => 'Str|Undef', is => 'rw', default => 24 );
+has 'cpus'				=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'qstat'				=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 # has 'qsub'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 # has 'maxjobs'	=> ( isa => 'Str|Undef', is => 'rw'	);
-has 'sleep'		=> ( isa => 'Str|Undef', is => 'rw', default => 10 );
-has 'cleanup'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'dot'		=> ( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'verbose'	=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'sleep'				=> ( isa => 'Str|Undef', is => 'rw', default => 10 );
+has 'cleanup'			=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'dot'					=> ( isa => 'Str|Undef', is => 'rw', default => '' );
+has 'verbose'			=> ( isa => 'Str|Undef', is => 'rw', default => '' );
 
 # Hash/Array
 # has 'envarsub'	=> ( isa => 'Maybe', is => 'rw', lazy => 1, builder => "setEnvarsub" );
-has 'customvars'=>	( isa => 'HashRef', is => 'rw', default => sub {
+has 'customvars'	=>	( isa => 'HashRef', is => 'rw', default => sub {
 	return {
-		cluster 		=> 	"CLUSTER",
+		cluster 			=> 	"CLUSTER",
 		qmasterport 	=> 	"SGE_MASTER_PORT",
 		execdport 		=> 	"SGE_EXECD_PORT",
-		sgecell 		=> 	"SGE_CELL",
-		sgeroot 		=> 	"SGE_ROOT",
-		queue 			=> 	"QUEUE"
+		sgecell 			=> 	"SGE_CELL",
+		sgeroot 			=> 	"SGE_ROOT",
+		queue 				=> 	"QUEUE"
 	};
 });
 
@@ -365,7 +365,6 @@ method executeLocal ( $jobs, $label ) {
 	my $qsub 	= $self->qsub();
 	my $qstat 	= $self->qstat();
 	my $sleep	= $self->sleep();
-	my $queue 	= $self->queue();	
 
 	#### SET DEFAULT SLEEP
 	$sleep = 3 if not defined $sleep;
@@ -439,7 +438,7 @@ method executeCluster ( $jobs, $label ) {
 	my $qsub 	= $self->qsub();
 	my $qstat 	= $self->qstat();
 	my $sleep	= $self->sleep();
-	my $queue 	= $self->queue();	
+	my $qsuboptions 	= $self->qsuboptions();	
 
 	#### SET DEFAULT SLEEP
 	$sleep = 3 if not defined $sleep;
@@ -489,7 +488,7 @@ method executeCluster ( $jobs, $label ) {
 				my $jobid = $monitor->submitJob(
 					{
 						scriptfile  => $scriptfile,
-						queue       => $queue,
+						qsuboptions       => $qsuboptions,
 						qmethod       	=> $qsub,
 						qstat		=> $qstat,
 						stdoutfile  => $stdoutfile,
@@ -751,7 +750,7 @@ method printSgeScriptfile ( $scriptfile, $commands, $label, $stdoutfile, $stderr
 	my $slots		= $self->slots();
 	$self->logDebug("slots", $slots);	
 
-	my $queue = $self->queue();
+	# my $queue = $self->queue();
 	my $cpus = $self->cpus();
 	$cpus = 1 if not defined $cpus or not $cpus;
 	$self->logNote("stdoutfile", $stdoutfile);
@@ -773,8 +772,8 @@ method printSgeScriptfile ( $scriptfile, $commands, $label, $stdoutfile, $stderr
 	$contents .= qq{#\$ -o $stdoutfile\n} if defined $stdoutfile;
 	$contents .= qq{#\$ -e $stderrfile\n} if defined $stderrfile;
 	
-	#### ADD QUEUE
-	$contents .= qq{#\$ -q $queue\n};
+	# #### ADD QUEUE
+	# $contents .= qq{#\$ -q $queue\n};
 
 	#### ADD SLOTS
 	#$contents .= qq{#\$ -pe threaded $slots\n};

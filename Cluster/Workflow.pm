@@ -35,7 +35,7 @@ has 'maxjobs'			=> 	( isa => 'Int', is => 'rw'	);
 has 'samplename'     	=>  ( isa => 'Str|Undef', is => 'rw' );
 has 'scheduler'	 	=> 	( isa => 'Str|Undef', is => 'rw', default	=>	"local");
 has 'qstat'				=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'queue'				=>  ( isa => 'Str|Undef', is => 'rw', default => 'default' );
+has 'qsuboptions'				=>  ( isa => 'Str|Undef', is => 'rw', default => 'default' );
 has 'cluster'			=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'keypairfile'	=> 	( isa => 'Str|Undef', is  => 'rw', required	=>	0	);
 has 'keyfile'			=> 	( isa => 'Str|Undef', is => 'rw'	);
@@ -162,7 +162,7 @@ method executeWorkflow ($data) {
 	my $start					=	$data->{start};
 	my $stop					=	$data->{stop};
 	my $dryrun				=	$data->{dryrun};
-	my $queue					=	$data->{queue};
+	my $qsuboptions		=	$data->{qsuboptions};
 	my $scheduler			=	$self->conf()->getKey("core:SCHEDULER");
 	my $force 				=	$self->force() || $data->{force};
 	$self->logDebug("force", $force);
@@ -209,7 +209,7 @@ method executeWorkflow ($data) {
 
 	#### SET STAGES
 	$self->logDebug("DOING self->setStages");
-	my $stages = $self->setStages($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $queue);
+	my $stages = $self->setStages($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $qsuboptions);
 	$self->logDebug("no. stages", scalar(@$stages));
 	if ( scalar(@$stages) == 0 ) {
 		print "Skipping workflow: $workflowname\n";
@@ -435,8 +435,8 @@ method runStages ($stages, $dryrun) {
 		#### SET STATUS TO running
 		$stage->setStatus('running');
 
-		#### SET QUEUE NAME FOR STAGE
-		$stage->setStageQueue( $stage->queue() );
+		#### STORE QSUB OPTIONS IN stage TABLE
+		$stage->setStageQsuboptions( $stage->qsuboptions() );
 
 		#### NOTIFY STATUS
 		if ( $worker ) {
@@ -497,7 +497,7 @@ method runStages ($stages, $dryrun) {
 	return 1;
 }
 
-method setStages ($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $queue) {
+method setStages ($username, $cluster, $data, $projectname, $workflowname, $workflownumber, $samplehash, $scheduler, $qsuboptions) {
 	$self->logGroup("Engine::Cluster::Workflow::setStages");
 	$self->logDebug("username", $username);
 	$self->logDebug("cluster", $cluster);
@@ -602,7 +602,7 @@ method setStages ($username, $cluster, $data, $projectname, $workflowname, $work
 		# $stage->{slots}			=	$slots;
 
 		#### QUEUE
-		$stage->{queue}			=  	$queue;
+		$stage->{qsuboptions}			=  	$qsuboptions;
 
 		#### SAMPLE HASH
 		$stage->{samplehash}	=  	$samplehash;
@@ -683,10 +683,10 @@ method updateJobStatus ($stage, $status) {
 		$data->{$field}	=	$stage->$field();
 	}
 
-	#### SET QUEUE IF NOT DEFINED
-	my $queue		=	"update.job.status";
-	$self->logDebug("queue", $queue);
-	$data->{queue}	=	$queue;
+	# #### SET QUEUE IF NOT DEFINED
+	# my $queue		=	"update.job.status";
+	# $self->logDebug("queue", $queue);
+	# $data->{queue}	=	$queue;
 	
 	#### SAMPLE HASH
 	my $samplehash		=	$self->samplehash();

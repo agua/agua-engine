@@ -205,15 +205,11 @@ method setStageJob {
 	my $workflownumber 	= $self->workflownumber();
 	my $workflowname 	= $self->workflowname();
 	my $appnumber 		= $self->appnumber();
-	my $queue 		= $self->queue();
 	my $cluster		= $self->cluster();
 	my $qstat		= $self->qstat();
 	my $qsub		= $self->qsub();
 	my $workflowpid = $self->workflowpid();
     #$self->logDebug("$$ cluster", $cluster);
-
-	#### SET DEFAULTS
-	$queue = '' if not defined $queue;
 
 	#### GET AGUA DIRECTORY FOR CREATING STDOUTFILE LATER
 	my $aguadir 	= $self->conf()->getKey("core:AGUADIR");
@@ -612,7 +608,7 @@ method toString {
 }
 
 method _toString {
-	my @keys = qw[ username projectname workflownumber workflowname appname appnumber start executor location fileroot queue queue_options outputdir scriptfile stdoutfile stderrfile workflowpid stagepid stagejobid submit setuid installdir cluster qsub qstat resultfile];
+	my @keys = qw[ username projectname workflownumber workflowname appname appnumber start executor location fileroot outputdir scriptfile stdoutfile stderrfile workflowpid stagepid stagejobid submit setuid installdir cluster qsub qstat resultfile];
 	my $string = '';
 	foreach my $key ( @keys )
 	{

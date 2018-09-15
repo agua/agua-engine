@@ -88,20 +88,12 @@ has 'random'			=> 	( isa => 'Str|Undef', is => 'rw', required	=> 	0);
 has 'configfile'	=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'installdir'	=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'fileroot'		=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'qstat'				=> 	( isa => 'Str|Undef', is => 'rw', default => '' );
-has 'queue'				=>  ( isa => 'Str|Undef', is => 'rw', default => 'default' );
-has 'cluster'			=>  ( isa => 'Str|Undef', is => 'rw', default => '' );
 has 'whoami'  		=>  ( isa => 'Str', is => 'rw', lazy	=>	1, builder => "setWhoami" );
 has 'username'  	=>  ( isa => 'Str', is => 'rw' );
 has 'password'  	=>  ( isa => 'Str', is => 'rw' );
 has 'workflowname'=>  ( isa => 'Str', is => 'rw' );
 has 'projectname' =>  ( isa => 'Str', is => 'rw' );
 has 'outputdir'		=>  ( isa => 'Str', is => 'rw' );
-has 'keypairfile'	=> 	( isa => 'Str|Undef', is  => 'rw', required	=>	0	);
-has 'keyfile'			=> 	( isa => 'Str|Undef', is => 'rw'	);
-has 'instancetype'=> 	( isa => 'Str|Undef', is  => 'rw', required	=>	0	);
-has 'sgeroot'			=> 	( isa => 'Str', is  => 'rw', default => "/opt/sge6"	);
-has 'sgecell'			=> 	( isa => 'Str', is  => 'rw', required	=>	0	);
 has 'upgradesleep'=> 	( isa => 'Int', is  => 'rw', default	=>	10	);
 
 # Object

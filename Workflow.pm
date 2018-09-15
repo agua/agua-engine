@@ -81,7 +81,7 @@ sub new {
         $runtype = "Cluster";
       }
     }
-    print "**** *** *** **** Engine::Workflow    runtype: $runtype\n";
+    # print "**** *** *** **** Engine::Workflow    runtype: $runtype\n";
  
     my $location    = "$path/$runtype/Workflow.pm";
     $class          = "Engine::" . $runtype . "::Workflow";

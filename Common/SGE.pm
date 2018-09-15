@@ -70,7 +70,7 @@ method sgeBinCommand ( $host ) {
 	#### SET COMMAND WITH ENVIRONMENT VARIABLES
 	my $envar 	=	$self->envar(); 
 	my $envarstring = $envar->toString();
-	$self->logDebug("envarstring", $envarstring);
+	# $self->logDebug("envarstring", $envarstring);
 	
 	my $sgebin = $self->conf()->getKey("scheduler:SGEBIN");
 	$self->logDebug("sgebin", $sgebin);
@@ -78,7 +78,7 @@ method sgeBinCommand ( $host ) {
 	# $sgebin = $self->head()->ops()->getSgeBinRoot() if $host eq "head";
 	# $sgebin = $self->master()->ops()->getSgeBinRoot() if $host eq "master";
 
-	$self->logNote("sgebin", $sgebin);
+	# $self->logNote("sgebin", $sgebin);
   
   my $command;	
 	$command .= $envarstring if defined $envar and defined $envarstring;

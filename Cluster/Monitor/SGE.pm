@@ -422,20 +422,20 @@ method submitJob ($job) {
 		IF JOB ID IS UNDEFINED, REPORT AND QUIT
 		
 =cut
-	$self->logDebug("Engine::Cluster::Monitor::SGE::submitJob(command)");
+	$self->logDebug("************************* Engine::Cluster::Monitor::SGE::submitJob(command)");
 	$self->logDebug("job", $job);
 	
-	my $queue 		= 	$job->{queue};
+	my $qsuboptions 		= 	$job->{qsuboptions};
 	my $batch 		= 	$job->{batch};
 	$batch = '' if not defined $batch;
 	my $scriptfile 	= 	$job->{scriptfile};
 	my $qsub 		=	$job->{qsub};
 	#$self->logDebug("qsub", $qsub);
 	
-	my $walltime 	=	$job->{walltime};
+#	my $walltime 	=	$job->{walltime};
 
 	#### CHECK INPUTS
-	$self->logDebug("queue not defined. Returning") and return if not defined $queue;
+	$self->logDebug("qsuboptions not defined. Returning") and return if not defined $qsuboptions;
 	$self->logDebug("qsub not defined. Returning") and return if not defined $qsub;
 	$self->logDebug("Scriptfile not defined. Returning null") and return if not defined $job->{scriptfile};
 
@@ -451,14 +451,12 @@ method submitJob ($job) {
 
 	#### SET MAXIMUM WALLTIME FOR THIS JOB
 	#### -l h_rt=hr:min:sec
-	$walltime = " -l h_rt=$walltime " if defined $walltime;
-	$walltime = " -l h_rt=24:00:00 " if not defined $walltime;
+#	$walltime = " -l h_rt=$walltime " if defined $walltime;
+#	$walltime = " -l h_rt=24:00:00 " if not defined $walltime;
 	
-	#### SET RERUNNABLE BY DEFAULT
-	my $rerunnable = "-r y";
 	
 	#### SET QSUB LINE
-	$command .= "$qsub $batch -q $queue -V $walltime $rerunnable $scriptfile 2>&1";
+	$command .= "$qsub $batch -V $qsuboptions $scriptfile 2>&1";
 	$self->logDebug("command", $command);
 
 	#### SUBMIT JOB
