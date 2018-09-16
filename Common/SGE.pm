@@ -73,7 +73,7 @@ method sgeBinCommand ( $host ) {
 	# $self->logDebug("envarstring", $envarstring);
 	
 	my $sgebin = $self->conf()->getKey("scheduler:SGEBIN");
-	$self->logDebug("sgebin", $sgebin);
+	# $self->logDebug("sgebin", $sgebin);
 
 	# $sgebin = $self->head()->ops()->getSgeBinRoot() if $host eq "head";
 	# $sgebin = $self->master()->ops()->getSgeBinRoot() if $host eq "master";
@@ -87,7 +87,7 @@ method sgeBinCommand ( $host ) {
 	# $self->headbinroot($command) if $host eq "head";
 	# $self->masterbinroot($command) if $host eq "master";
 
-	$self->logDebug("RETURNING command", $command);	
+	# $self->logDebug("RETURNING command", $command);	
 	return $command;
 }
 
