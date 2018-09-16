@@ -244,7 +244,7 @@ AND appnumber='$appnumber'};
 }
 
 
-method setStageQsuboptions ($qsuboptions) {
+method setStageQsubOptions ($qsuboptions) {
 	$self->logDebug("qsuboptions", $qsuboptions);
 	
 	#### GET TABLE KEYS

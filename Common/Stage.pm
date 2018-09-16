@@ -230,7 +230,7 @@ method setSystemCall {
 
 	#### ADD PERL5LIB TO ENABLE EXTERNAL SCRIPTS TO USE OUR MODULES
 	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$installdir/lib";
+	my $perl5lib = "$installdir/extlib/lib/perl5";
 
 	#### SET EXPORTS
 	my $envar 			= 	$self->envar();
@@ -367,7 +367,7 @@ method setStageJob {
 
 	#### GET PERL5LIB FOR EXTERNAL SCRIPTS TO FIND Agua MODULES
 	my $installdir = $self->conf()->getKey("core:INSTALLDIR");
-	my $perl5lib = "$installdir/lib";
+	my $perl5lib = "$installdir/extlib/lib/perl5";
 	
 	#### SET EXECUTOR
 	my $executor	.=	"export PERL5LIB=$perl5lib; ";
