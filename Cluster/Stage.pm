@@ -243,7 +243,10 @@ AND appnumber='$appnumber'};
 	return $successor;	
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b717eec00039bf658949980ef37a9a543f657c40
 method setStageQsubOptions ($qsuboptions) {
 	$self->logDebug("qsuboptions", $qsuboptions);
 	
