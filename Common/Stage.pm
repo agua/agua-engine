@@ -247,18 +247,26 @@ method setSystemCall {
 	my $prescript		=	$self->prescript();
 	$self->logDebug("prescript", $prescript);
 	if ( defined $prescript and $prescript ne "" ) {
-		if ( ($prescript) =~ s/^file:// ) {
-			$self->logDebug("prescript", $prescript);
+		$prescript	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $prescript );
 
-			$prescript	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $prescript );
-
-			$prescript	=	$self->getPreScript( $prescript );
+		my @scripts = split ",", $prescript;
+		$prescript = "";
+		foreach my $script ( @scripts ) {
+			if ( ($script) =~ s/^file:// ) {
+				$self->logDebug("prescript", $prescript);
+				$prescript	.=	$self->getPreScript( $prescript );
+			}
+			else {
+				$prescript .= $script;			
+			}
+			$prescript =~ s/[;\s]*$//g;
+			$prescript .= ";";
 		}
+
 		$self->logDebug("prescript", $prescript);
-		$prescript =~ s/[;\s]*$//g;
-		$prescript .= ";";
-		$exports .= $prescript;
 	}
+
+	$exports .= $prescript;
 	$self->logDebug("FINAL exports", $exports);
 	
 	$exports	=	$self->replaceTags( $userhome, $fileroot, $projectname, $workflowname, $exports );
@@ -757,6 +765,10 @@ method setRunTimes ($jobid) {
 	my ($queued) = $qacct =~ /qsub_time\s+([^\n]+)/ms;
 	my ($started) = $qacct =~ /start_time\s+([^\n]+)/ms;
 	my ($completed) = $qacct =~ /end_time\s+([^\n]+)/ms;
+	$self->logDebug("queued", $queued);
+	$self->logDebug("started", $started);
+	$self->logDebug("completed", $completed);
+
 	$queued = $self->datetimeToMysql($queued);
 	$started = $self->datetimeToMysql($started);
 	$completed = $self->datetimeToMysql($completed);

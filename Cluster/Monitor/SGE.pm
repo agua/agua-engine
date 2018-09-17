@@ -456,7 +456,7 @@ method submitJob ($job) {
 	
 	
 	#### SET QSUB LINE
-	$command .= "$qsub $batch -V $qsuboptions $scriptfile 2>&1";
+	$command .= "$qsub $batch $qsuboptions $scriptfile 2>&1";
 	$self->logDebug("command", $command);
 
 	#### SUBMIT JOB
