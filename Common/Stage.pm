@@ -253,8 +253,8 @@ method setSystemCall {
 		$prescript = "";
 		foreach my $script ( @scripts ) {
 			if ( ($script) =~ s/^file:// ) {
-				$self->logDebug("prescript", $prescript);
-				$prescript	.=	$self->getPreScript( $prescript );
+				$self->logDebug("script", $script);
+				$prescript	.=	$self->getPreScript( $script );
 			}
 			else {
 				$prescript .= $script;			
