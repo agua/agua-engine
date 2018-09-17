@@ -183,7 +183,6 @@ method setEnvar {
 
 
 method BUILD ($args) {
-	$self->log(5);
 	$self->logCaller("");
 	$self->logDebug("DOING self->loadArgs()");
 	$self->loadArgs($args);

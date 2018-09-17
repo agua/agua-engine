@@ -469,37 +469,6 @@ completed = ''};
 	$self->setFields($set);
 }
 
-method setRunTimes ($jobid) {
-	$self->logDebug("$$ Stage::setRunTimes(jobid)");
-	$self->logDebug("$$ jobid", $jobid);
-	my $username = $self->username();
-	my $cluster = $self->cluster();
-	my $qacct = $self->monitor()->qacct($username, $cluster, $jobid);
-	$self->logDebug("$$ qacct", $qacct);
-
-	return if not defined $qacct or not $qacct;
-	return if $qacct =~ /^error: job id \d+ not found/;
-
-	#### QACCT OUTPUT FORMAT:
-	#	qsub_time    Sat Sep 24 01:05:17 2011
-	#	start_time   Sat Sep 24 01:05:24 2011
-	#	end_time     Sat Sep 24 01:05:24 2011
-
-	my ($queued) = $qacct =~ /qsub_time\s+([^\n]+)/ms;
-	my ($started) = $qacct =~ /start_time\s+([^\n]+)/ms;
-	my ($completed) = $qacct =~ /end_time\s+([^\n]+)/ms;
-	$queued = $self->datetimeToMysql($queued);
-	$started = $self->datetimeToMysql($started);
-	$completed = $self->datetimeToMysql($completed);
-	
-	my $set = qq{
-queued = '$queued',
-started = '$started',
-completed = '$completed'};
-	$self->logDebug("$$ set", $set);
-
-	$self->setFields($set);
-}
 method setRunningStatus {
 	my $now = $self->table()->db()->now();
 	my $set = qq{status='running',
