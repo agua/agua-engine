@@ -1,15 +1,15 @@
-package Engine::Common::SGE;
+package Engine::Common::Slurm;
 use Moose::Role;
 use Method::Signatures::Simple;
 
 =head2
 
-PACKAGE Engine::Common::SGE
-
-PURPOSE
-
-SUN GRID ENGINE METHODS
-
+	PACKAGE		Engine::Common::Slurm
+	
+	PURPOSE
+	
+		SUN GRID ENGINE METHODS
+		
 =cut
 
 use Data::Dumper;
@@ -99,9 +99,9 @@ method createQueuefile ( $queue, $queuefile, $parameters ) {
 	$self->logError("Can't create queuefiledir: $queuefiledir") and exit if not -d $queuefiledir;
 
 	my $contents = $self->setQueuefileContents($queue, $parameters);
-	open(OUT, ">$queuefile") or die "Engine::Common::SGE::createQueuefile    Can't open queuefile: $queuefile\n";
+	open(OUT, ">$queuefile") or die "Engine::Common::Slurm::createQueuefile    Can't open queuefile: $queuefile\n";
 	print OUT $contents;
-	close(OUT) or die "Engine::Common::SGE::createQueuefile    Can't close queuefile: $queuefile\n";
+	close(OUT) or die "Engine::Common::Slurm::createQueuefile    Can't close queuefile: $queuefile\n";
 
 	return $queuefile;
 }
@@ -315,11 +315,11 @@ method addPE ( $pe, $pefile, $slots ) {
 	#### BACKUP IF EXISTS
 	$self->backupFile($pefile) if -f $pefile;
 	
-	open(OUT, ">$pefile") or die "Engine::Common::SGE::addPE    Can't open pefile: $pefile\n";
+	open(OUT, ">$pefile") or die "Engine::Common::Slurm::addPE    Can't open pefile: $pefile\n";
 	my $contents = $self->setPEFileContents($pe, $slots);
 	$self->logDebug("contents", $contents);
 	print OUT $contents;
-	close(OUT) or die "Engine::Common::SGE::addPE    Can't close pefile: $pefile\n";
+	close(OUT) or die "Engine::Common::Slurm::addPE    Can't close pefile: $pefile\n";
 	$self->logDebug("pefile", $pefile);
 	
 	#### ADD THE QUEUE
@@ -356,9 +356,9 @@ method addPEToQueue ( $pe, $queue, $queuefile ) {
 	my $contents = $self->addPEQueuefileContents($pe, $queue, $queuefile);
 	
 	#### PRINT MODIFIED CONTENT TO QUEUE CONF FILE
-	open(OUT, ">$queuefile") or die "Monitor::SGE::addPEToQueue    Can't write to queuefile: $queuefile\n";
+	open(OUT, ">$queuefile") or die "Monitor::Slurm::addPEToQueue    Can't write to queuefile: $queuefile\n";
 	print OUT $contents;
-	close(OUT) or die "Monitor::SGE::addPEToQueue    Can't close queuefile: $queuefile\n";
+	close(OUT) or die "Monitor::Slurm::addPEToQueue    Can't close queuefile: $queuefile\n";
 	
 	$self->modifyQueue($queue, $queuefile);
 }
